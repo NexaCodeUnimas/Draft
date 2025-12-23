@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:version0/profile_management_screen.dart';
 import 'welcome_screen.dart';
 import 'login_screen.dart';
 import 'register_screen.dart';
@@ -29,6 +30,7 @@ class FloorbitApp extends StatelessWidget {
         '/register': (context) => const RegisterScreen(),
         '/home': (context) => const HomeScreen(),
         '/products': (context) => const ProductCataloguePage(),
+        '/profile_management': (context) => const ProfileManagementScreen(),
       },
     );
   }

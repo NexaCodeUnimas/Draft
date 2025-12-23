@@ -27,9 +27,9 @@ class HomeScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
+                  const Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: const [
+                    children: [
                       Text(
                         "Floorbit",
                         style: TextStyle(
@@ -56,8 +56,8 @@ class HomeScreen extends StatelessWidget {
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(16),
                     ),
-                    child: Row(
-                      children: const [
+                    child: const Row(
+                      children: [
                         Expanded(
                           child: Text(
                             "What would you like to do today?",
@@ -88,7 +88,7 @@ class HomeScreen extends StatelessWidget {
               icon: Icons.calendar_month,
               title: "Book Appointment",
               subtitle: "Schedule a consultation with experts",
-              onTap: () {},
+              onTap: () => Navigator.pushNamed(context, '/profile_management'),
             ),
             _ActionCard(
               icon: Icons.local_shipping,
