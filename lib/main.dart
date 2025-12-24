@@ -4,7 +4,7 @@ import 'login_screen.dart';
 import 'register_screen.dart';
 import 'home_screen.dart';
 import 'product_catalogue_page.dart';
-import 'product_details_page.dart';
+import 'AI_screeen.dart';
 
 void main() {
   runApp(const FloorbitApp());
@@ -29,6 +29,7 @@ class FloorbitApp extends StatelessWidget {
         '/register': (context) => const RegisterScreen(),
         '/home': (context) => const HomeScreen(),
         '/products': (context) => const ProductCataloguePage(),
+        '/ai': (context) => const GeminiChatApp()
       },
     );
   }

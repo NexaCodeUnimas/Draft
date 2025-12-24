@@ -82,7 +82,7 @@ class HomeScreen extends StatelessWidget {
               icon: Icons.auto_awesome,
               title: "AI Assistance",
               subtitle: "AI-powered visualization & recommendations",
-              onTap: () {},
+              onTap: () => Navigator.pushNamed(context, '/ai'),
             ),
             _ActionCard(
               icon: Icons.calendar_month,
@@ -140,7 +140,8 @@ class _ActionCard extends StatelessWidget {
             ),
             child: Icon(icon, color: Colors.orange),
           ),
-          title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
+          title:
+              Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
           subtitle: Text(subtitle),
           trailing: const Icon(Icons.chevron_right),
           onTap: onTap,
@@ -149,4 +150,3 @@ class _ActionCard extends StatelessWidget {
     );
   }
 }
-
