@@ -12,7 +12,7 @@ class LoginScreen extends StatelessWidget {
     final passwordController = TextEditingController();
 
     return Scaffold(
-      appBar: AppBar(title: const Text("Login")),
+      appBar: AppBar(title: const Text("Login"), backgroundColor: const Color(0xFFFF9800)),
       body: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
@@ -33,29 +33,52 @@ class LoginScreen extends StatelessWidget {
                 prefixIcon: Icon(Icons.lock),
               ),
             ),
-            const SizedBox(height: 30),
+            const SizedBox(height: 16),
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton(
+                onPressed: () async {
+                  final email = emailController.text.trim();
+                  if (email.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text("Please enter your email to reset password")),
+                    );
+                    return;
+                  }
+                  try {
+                    await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text("Password reset link sent! Check your email.")),
+                    );
+                  } on FirebaseAuthException catch (e) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(e.message ?? "Failed to send reset email")),
+                    );
+                  }
+                },
+                child: const Text("Forgot Password?", style: TextStyle(color: Colors.orange)),
+              ),
+            ),
+            const SizedBox(height: 16),
             ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFFF9800)),
               onPressed: () async {
                 try {
-                  UserCredential cred = await FirebaseAuth.instance
-                      .signInWithEmailAndPassword(
-                          email: emailController.text.trim(),
-                          password: passwordController.text.trim());
+                  UserCredential cred = await FirebaseAuth.instance.signInWithEmailAndPassword(
+                      email: emailController.text.trim(),
+                      password: passwordController.text.trim());
 
                   final user = cred.user;
                   if (user == null) return;
 
-                  final profileRef = FirebaseFirestore.instance
-                      .collection('profiles')
-                      .doc(user.uid);
+                  final profileRef = FirebaseFirestore.instance.collection('profiles').doc(user.uid);
                   final profileSnap = await profileRef.get();
 
                   if (!profileSnap.exists) {
                     Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                            builder: (_) =>
-                                ProfileInputScreen(userId: user.uid)));
+                      context,
+                      MaterialPageRoute(builder: (_) => ProfileInputScreen(userId: user.uid)),
+                    );
                   } else {
                     Navigator.pushReplacementNamed(context, '/home');
                   }
