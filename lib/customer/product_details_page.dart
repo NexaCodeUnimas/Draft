@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:provider/provider.dart';
+import '../models/product.dart';
+import '../provider/cart_provider.dart';
 
 class ProductDetailsPage extends StatefulWidget {
   final String productId;
-
   const ProductDetailsPage({super.key, required this.productId});
 
   @override
@@ -57,13 +59,16 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
       appBar: AppBar(
         backgroundColor: Colors.orange,
         title: const Text("Product Details"),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.pop(context),
+        ),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Main Image
             ClipRRect(
               borderRadius: BorderRadius.circular(12),
               child: Image.asset(
@@ -74,20 +79,14 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
               ),
             ),
             const SizedBox(height: 12),
-
-            // Product Name
             Text(productData!['name'],
-                style: const TextStyle(
-                    fontSize: 20, fontWeight: FontWeight.bold)),
+                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
             const SizedBox(height: 6),
-
-            // Tags
             Wrap(
               spacing: 6,
               children: (productData!['tags'] as List<dynamic>)
                   .map((tag) => Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
                           color: Colors.orange.shade100,
                           borderRadius: BorderRadius.circular(12),
@@ -97,31 +96,21 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                   .toList(),
             ),
             const SizedBox(height: 8),
-
-            // Price
             Text(productData!['price'],
                 style: const TextStyle(
-                    color: Colors.orange,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 28)),
+                    color: Colors.orange, fontWeight: FontWeight.bold, fontSize: 28)),
             const SizedBox(height: 12),
-
-            // Description from Firestore
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: Colors.orange.shade50,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: Colors.orange.shade700,
-                ),
+                border: Border.all(color: Colors.orange.shade700),
               ),
               child: Text(description),
             ),
             const SizedBox(height: 12),
-
-            // Color options
             Text('Color: $selectedColorName',
                 style: const TextStyle(fontWeight: FontWeight.bold)),
             const SizedBox(height: 6),
@@ -140,25 +129,18 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                     },
                     child: Container(
                       margin: const EdgeInsets.only(right: 8),
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 6),
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
-                        color: isSelected
-                            ? Colors.orange.shade200
-                            : Colors.grey.shade200,
+                        color: isSelected ? Colors.orange.shade200 : Colors.grey.shade200,
                         border: Border.all(
-                          color: isSelected ? Colors.orange : Colors.grey,
-                          width: 2,
-                        ),
+                            color: isSelected ? Colors.orange : Colors.grey, width: 2),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Center(
                         child: Text(
                           colorName,
                           style: TextStyle(
-                            color: isSelected
-                                ? Colors.orange.shade900
-                                : Colors.black,
+                            color: isSelected ? Colors.orange.shade900 : Colors.black,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -169,8 +151,6 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
               ),
             ),
             const SizedBox(height: 12),
-
-            // Quantity selector
             Row(
               children: [
                 const Text("Quantity:",
@@ -191,8 +171,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                           });
                         },
                       ),
-                      Text(quantity.toString(),
-                          style: const TextStyle(fontSize: 16)),
+                      Text(quantity.toString(), style: const TextStyle(fontSize: 16)),
                       IconButton(
                         icon: const Icon(Icons.add),
                         onPressed: () {
@@ -207,33 +186,23 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
               ],
             ),
             const SizedBox(height: 12),
-
             Text("Total: RM $totalPrice",
                 style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 20,
-                    color: Colors.orange)),
+                    fontWeight: FontWeight.bold, fontSize: 20, color: Colors.orange)),
             const SizedBox(height: 20),
-
             SizedBox(
               width: double.infinity,
               height: 50,
               child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.orange,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
                 onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Added to cart!')),
-                  );
+                  final cart = context.read<CartProvider>();
+                  cart.addItem(Product.fromMap(widget.productId, productData!),
+                      color: selectedColorName);
+                  ScaffoldMessenger.of(context)
+                      .showSnackBar(const SnackBar(content: Text('Added to cart!')));
                 },
-                child: const Text(
-                  "Add to Cart",
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
+                child: const Text("Add to Cart",
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
               ),
             ),
           ],
