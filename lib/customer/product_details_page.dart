@@ -1,34 +1,57 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class ProductDetailsPage extends StatefulWidget {
-  final Map<String, dynamic> product;
+  final String productId;
 
-  const ProductDetailsPage({super.key, required this.product});
+  const ProductDetailsPage({super.key, required this.productId});
 
   @override
   State<ProductDetailsPage> createState() => _ProductDetailsPageState();
 }
 
 class _ProductDetailsPageState extends State<ProductDetailsPage> {
-  late String displayedImage;
-  late String selectedColorName;
+  Map<String, dynamic>? productData;
+  bool isLoading = true;
+  String displayedImage = '';
+  String selectedColorName = '';
   int quantity = 1;
-  late double unitPrice;
+  double unitPrice = 0;
 
   @override
   void initState() {
     super.initState();
-    displayedImage = widget.product['image'];
-    selectedColorName = widget.product['colors'][0];
+    _loadProduct();
+  }
 
-    // Parse the price string (e.g., "RM 150.00/box") to a double
-    final priceString = widget.product['price'].toString().replaceAll('RM', '').split('/')[0].trim();
-    unitPrice = double.tryParse(priceString) ?? 0.0;
+  void _loadProduct() async {
+    final doc = await FirebaseFirestore.instance
+        .collection('products')
+        .doc(widget.productId)
+        .get();
+    if (doc.exists) {
+      setState(() {
+        productData = doc.data();
+        displayedImage = productData!['image'];
+        selectedColorName = productData!['colors'][0];
+        unitPrice = double.tryParse(
+                productData!['price'].toString().replaceAll(RegExp(r'[^0-9.]'), '')) ??
+            0;
+        isLoading = false;
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    if (isLoading || productData == null) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
     final totalPrice = (unitPrice * quantity).toStringAsFixed(2);
+    final description = productData!['description'] ?? "No description available";
 
     return Scaffold(
       appBar: AppBar(
@@ -53,7 +76,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
             const SizedBox(height: 12),
 
             // Product Name
-            Text(widget.product['name'],
+            Text(productData!['name'],
                 style: const TextStyle(
                     fontSize: 20, fontWeight: FontWeight.bold)),
             const SizedBox(height: 6),
@@ -61,7 +84,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
             // Tags
             Wrap(
               spacing: 6,
-              children: (widget.product['tags'] as List<String>)
+              children: (productData!['tags'] as List<dynamic>)
                   .map((tag) => Container(
                         padding: const EdgeInsets.symmetric(
                             horizontal: 8, vertical: 4),
@@ -75,15 +98,15 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
             ),
             const SizedBox(height: 8),
 
-            // Price per box
-            Text(widget.product['price'],
+            // Price
+            Text(productData!['price'],
                 style: const TextStyle(
                     color: Colors.orange,
                     fontWeight: FontWeight.bold,
                     fontSize: 28)),
             const SizedBox(height: 12),
 
-            // Description box
+            // Description from Firestore
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(12),
@@ -92,67 +115,57 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
                   color: Colors.orange.shade700,
-                  style: BorderStyle.solid, // you can later change to dashed if needed
                 ),
               ),
-              child: const Text(
-                'This is a premium quality flooring product. Durable, eco-friendly, perfect for interiors.',
-                style: TextStyle(fontSize: 14),
-              ),
+              child: Text(description),
             ),
             const SizedBox(height: 12),
 
-            // Color name
+            // Color options
             Text('Color: $selectedColorName',
                 style: const TextStyle(fontWeight: FontWeight.bold)),
             const SizedBox(height: 6),
-
-            // Color options (names only)
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Row(
-                children: List.generate(
-                  (widget.product['colors'] as List).length,
-                  (index) {
-                    final colorName = widget.product['colors'][index];
-                    final isSelected = selectedColorName == colorName;
-                    return GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          selectedColorName = colorName;
-                          displayedImage =
-                              widget.product['colorImages'][index];
-                        });
-                      },
-                      child: Container(
-                        margin: const EdgeInsets.only(right: 8),
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: isSelected
-                              ? Colors.orange.shade200
-                              : Colors.grey.shade200,
-                          border: Border.all(
-                            color: isSelected ? Colors.orange : Colors.grey,
-                            width: 2,
-                          ),
-                          borderRadius: BorderRadius.circular(8),
+                children: List.generate(productData!['colors'].length, (index) {
+                  final colorName = productData!['colors'][index];
+                  final isSelected = selectedColorName == colorName;
+                  return GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        selectedColorName = colorName;
+                        displayedImage = productData!['colorImages'][index];
+                      });
+                    },
+                    child: Container(
+                      margin: const EdgeInsets.only(right: 8),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? Colors.orange.shade200
+                            : Colors.grey.shade200,
+                        border: Border.all(
+                          color: isSelected ? Colors.orange : Colors.grey,
+                          width: 2,
                         ),
-                        child: Center(
-                          child: Text(
-                            colorName,
-                            style: TextStyle(
-                              color: isSelected
-                                  ? Colors.orange.shade900
-                                  : Colors.black,
-                              fontWeight: FontWeight.bold,
-                            ),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Center(
+                        child: Text(
+                          colorName,
+                          style: TextStyle(
+                            color: isSelected
+                                ? Colors.orange.shade900
+                                : Colors.black,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
                       ),
-                    );
-                  },
-                ),
+                    ),
+                  );
+                }),
               ),
             ),
             const SizedBox(height: 12),
@@ -161,8 +174,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
             Row(
               children: [
                 const Text("Quantity:",
-                    style: TextStyle(
-                        fontWeight: FontWeight.bold, fontSize: 16)),
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                 const SizedBox(width: 12),
                 Container(
                   decoration: BoxDecoration(
@@ -196,7 +208,6 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
             ),
             const SizedBox(height: 12),
 
-            // Total Price
             Text("Total: RM $totalPrice",
                 style: const TextStyle(
                     fontWeight: FontWeight.bold,
@@ -204,7 +215,6 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                     color: Colors.orange)),
             const SizedBox(height: 20),
 
-            // Add to Cart button
             SizedBox(
               width: double.infinity,
               height: 50,
@@ -216,7 +226,6 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                   ),
                 ),
                 onPressed: () {
-                  // Add your cart logic here
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Added to cart!')),
                   );

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'product_details_page.dart';
 
 class ProductCataloguePage extends StatefulWidget {
@@ -13,146 +14,9 @@ class _ProductCataloguePageState extends State<ProductCataloguePage> {
   String? selectedPrice;
   String? selectedType;
 
-  // Full product list with all color names and image paths
-  final List<Map<String, dynamic>> products = const [
-    {
-      "name": "Waterblock 6mm",
-      "price": "RM 136.00/box",
-      "tags": ["Waterproof", "Plastic-free"],
-      "image": "assets/6mm/6mm.jpg",
-      "type": "6mm",
-      "colors": [
-        "W6601 Blanco Roble",
-        "W6602 Pizarra",
-        "W6603 Durazno",
-        "W6605 Sabio Roble",
-        "W6606 Moreno Teca",
-        "W6608 Fresia",
-        "W6609 Chocolate",
-        "W6610 Jarra Vino"
-      ],
-      "colorImages": [
-        "assets/6mm/W6601 Blanco Roble.jpg",
-        "assets/6mm/W6602 Pizarra.jpg",
-        "assets/6mm/W6603 Durazno.jpg",
-        "assets/6mm/W6605 Sabio Roble.jpg",
-        "assets/6mm/W6606 Moreno Teca.jpg",
-        "assets/6mm/W6608 Fresia.jpg",
-        "assets/6mm/W6609 Chocolate.jpg",
-        "assets/6mm/W6610 Jarra Vino.jpg"
-      ]
-    },
-    {
-      "name": "Waterblock Pro 8.6mm",
-      "price": "RM 200.00/box",
-      "tags": ["Waterproof", "Plastic-free"],
-      "image": "assets/8.6mm/8.6mm.jpg",
-      "type": "8mm",
-      "colors": [
-        "W01 Raggi di Sole",
-        "W02 Bianco",
-        "W03 Desiderio",
-        "W05 Authentico",
-        "W06 Barcelona Oak",
-        "W08 Black Walnut",
-        "W09 Bocote",
-        "W10 Bubinga"
-      ],
-      "colorImages": [
-        "assets/8.6mm/W01 Raggi di Sole.jpg",
-        "assets/8.6mm/W02 Bianco.jpg",
-        "assets/8.6mm/W03 Desiderio.jpg",
-        "assets/8.6mm/W05 Authentico.jpg",
-        "assets/8.6mm/W06 Barcelona Oak.jpg",
-        "assets/8.6mm/W08 Black Walnut.jpg",
-        "assets/8.6mm/W09 Bocote.jpg",
-        "assets/8.6mm/W10 Bubinga.jpg"
-      ]
-    },
-    {
-      "name": "Waterblock XE 8mm",
-      "price": "RM 150.00/box",
-      "tags": ["Waterproof", "Plastic-Free"],
-      "image": "assets/XE/XE.jpg",
-      "type": "8mm",
-      "colors": [
-        "33 Balli Teak",
-        "21 Sakulamento Oak",
-        "36 Madula Oak",
-        "39 Abinyong",
-        "46 Hunjehan Oak"
-      ],
-      "colorImages": [
-        "assets/XE/33 Balli Teak.jpg",
-        "assets/XE/21 Sakulamento Oak.jpg",
-        "assets/XE/36 Madula Oak.jpg",
-        "assets/XE/39 Abinyong.jpg",
-        "assets/XE/46 Hunjehan Oak.jpg"
-      ]
-    },
-    {
-      "name": "Waterblock Pro 12.6mm Herringbone",
-      "price": "RM 144.00/box",
-      "tags": ["Waterproof", "Plastic-Free"],
-      "image": "assets/12.6mm/12.6mm.jpg",
-      "type": "12.6mm",
-      "colors": [
-        "46 Hunjehan Oak",
-        "06 Barcelona Oak",
-        "08 Black Walnut",
-        "09 Bocote",
-        "10 Bubinga",
-        "12"
-      ],
-      "colorImages": [
-        "assets/12.6mm/46 Hunjehan Oak.jpg",
-        "assets/12.6mm/06 Barcelona Oak.jpg",
-        "assets/12.6mm/08 Black Walnut.jpg",
-        "assets/12.6mm/09 Bocote.jpg",
-        "assets/12.6mm/10 Bubinga.jpg",
-        "assets/12.6mm/12.jpg"
-      ]
-    },
-  ];
-
-  // Filter function
-  List<Map<String, dynamic>> filterProducts() {
-    return products.where((product) {
-      final matchesSearch = product["name"]
-          .toString()
-          .toLowerCase()
-          .contains(searchQuery.toLowerCase());
-
-      bool matchesPrice = true;
-      if (selectedPrice != null) {
-        final priceValue = double.tryParse(
-                product["price"].toString().replaceAll(RegExp(r'[^0-9.]'), '')) ??
-            0;
-        if (selectedPrice == "<150") {
-          matchesPrice = priceValue < 150;
-        } else if (selectedPrice == ">150") {
-          matchesPrice = priceValue >= 150;
-        }
-      }
-
-      bool matchesType = true;
-      if (selectedType != null) {
-        if (selectedType == "6mm") {
-          matchesType = product["type"] == "6mm";
-        } else if (selectedType == "8mm") {
-          matchesType = product["type"] == "8mm";
-        } else if (selectedType == "12.6mm") {
-          matchesType = product["type"] == "12.6mm";
-        }
-      }
-
-      return matchesSearch && matchesPrice && matchesType;
-    }).toList();
-  }
-
   @override
   Widget build(BuildContext context) {
-    final filteredProducts = filterProducts();
+    final productRef = FirebaseFirestore.instance.collection('products');
 
     return Scaffold(
       appBar: AppBar(
@@ -198,25 +62,68 @@ class _ProductCataloguePageState extends State<ProductCataloguePage> {
 
           // Product Grid
           Expanded(
-            child: GridView.builder(
-              padding: const EdgeInsets.all(12),
-              itemCount: filteredProducts.length,
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                childAspectRatio: 0.68,
-                crossAxisSpacing: 12,
-                mainAxisSpacing: 12,
-              ),
-              itemBuilder: (context, index) {
-                final product = filteredProducts[index];
-                return GestureDetector(
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => ProductDetailsPage(product: product),
-                    ),
+            child: StreamBuilder<QuerySnapshot>(
+              stream: productRef.snapshots(),
+              builder: (context, snapshot) {
+                if (!snapshot.hasData) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+                final docs = snapshot.data!.docs
+                    .where((doc) => (doc['name'] as String)
+                        .toLowerCase()
+                        .contains(searchQuery.toLowerCase()))
+                    .toList();
+
+                // Filter by price/type
+                final filteredDocs = docs.where((doc) {
+                  bool matchesPrice = true;
+                  bool matchesType = true;
+
+                  // Price filter
+                  if (selectedPrice != null) {
+                    final priceValue = double.tryParse(
+                            doc['price'].toString().replaceAll(RegExp(r'[^0-9.]'), '')) ??
+                        0;
+                    if (selectedPrice == "<150") matchesPrice = priceValue < 150;
+                    if (selectedPrice == ">150") matchesPrice = priceValue >= 150;
+                  }
+
+                  // Type filter
+                  if (selectedType != null) {
+                    matchesType = doc['type'] == selectedType;
+                  }
+
+                  return matchesPrice && matchesType;
+                }).toList();
+
+                if (filteredDocs.isEmpty) {
+                  return const Center(child: Text("No products found."));
+                }
+
+                return GridView.builder(
+                  padding: const EdgeInsets.all(12),
+                  itemCount: filteredDocs.length,
+                  gridDelegate:
+                      const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    childAspectRatio: 0.68,
+                    crossAxisSpacing: 12,
+                    mainAxisSpacing: 12,
                   ),
-                  child: ProductTile(product: product),
+                  itemBuilder: (context, index) {
+                    final product = filteredDocs[index];
+                    return GestureDetector(
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) =>
+                              ProductDetailsPage(productId: product.id),
+                        ),
+                      ),
+                      child: ProductTile(product: product),
+                    );
+                  },
                 );
               },
             ),
@@ -227,6 +134,7 @@ class _ProductCataloguePageState extends State<ProductCataloguePage> {
   }
 }
 
+// Filter Dialog (reuse your previous one)
 class FilterDialog extends StatefulWidget {
   final String? selectedPrice;
   final String? selectedType;
@@ -333,14 +241,14 @@ class _FilterDialogState extends State<FilterDialog> {
   }
 }
 
-
-// Product Tile
+// ProductTile using Firestore doc
 class ProductTile extends StatelessWidget {
-  final Map<String, dynamic> product;
+  final QueryDocumentSnapshot product;
   const ProductTile({super.key, required this.product});
 
   @override
   Widget build(BuildContext context) {
+    final data = product.data() as Map<String, dynamic>;
     return Container(
       decoration: BoxDecoration(
         border: Border.all(color: Colors.grey.shade300),
@@ -350,11 +258,12 @@ class ProductTile extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           ClipRRect(
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+            borderRadius:
+                const BorderRadius.vertical(top: Radius.circular(12)),
             child: Image.asset(
-              product["image"],
+              data['image'],
               width: double.infinity,
-              height: 400,
+              height: 120,
               fit: BoxFit.cover,
             ),
           ),
@@ -363,13 +272,13 @@ class ProductTile extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(product["name"],
+                Text(data['name'],
                     style: const TextStyle(
                         fontWeight: FontWeight.bold, fontSize: 14)),
                 const SizedBox(height: 4),
                 Wrap(
                   spacing: 4,
-                  children: (product["tags"] as List<String>)
+                  children: (data['tags'] as List<dynamic>)
                       .map((tag) => Container(
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 6, vertical: 2),
@@ -389,23 +298,12 @@ class ProductTile extends StatelessWidget {
           const Spacer(),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  product["price"],
-                  style: const TextStyle(
-                      color: Colors.orange,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14),
-                ),
-                const Text(
-                  "View details →",
-                  style: TextStyle(
-                      color: Color.fromARGB(255, 72, 72, 72),
-                      fontWeight: FontWeight.w600),
-                ),
-              ],
+            child: Text(
+              data['price'],
+              style: const TextStyle(
+                  color: Colors.orange,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14),
             ),
           ),
         ],
