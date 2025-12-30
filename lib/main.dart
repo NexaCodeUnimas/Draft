@@ -11,6 +11,7 @@ import 'view_appointment_screen.dart';
 import 'appointment_screen.dart';
 import 'AI_screeen.dart';
 import 'orderhistory.dart';
+import 'admin_home_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -38,11 +39,12 @@ class FloorbitApp extends StatelessWidget {
         '/home': (context) => const HomeScreen(),
         '/products': (context) => const ProductCataloguePage(),
         '/profile_management': (context) => const ProfileManagementScreen(),
-        '/appointments_menu': (context) => const AppointmentMenuScreen(), // NEW
-        '/book_appointment': (context) => const CustBookAppointmentScreen(), // NEW
-        '/view_appointments': (context) => const ViewAppointmentsScreen(), // NEW
+        '/appointments_menu': (context) => const AppointmentMenuScreen(),
+        '/book_appointment': (context) => const CustBookAppointmentScreen(),
+        '/view_appointments': (context) => const ViewAppointmentsScreen(),
         '/ai': (context) => const GeminiChatApp(),
         '/orderhistory': (context) => const TrackOrdersScreen(),
+        '/admin_home': (context) => const AdminHomeScreen(), // admin route
       },
     );
   }
