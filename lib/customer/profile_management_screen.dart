@@ -58,8 +58,7 @@ class _ProfileManagementScreenState extends State<ProfileManagementScreen> {
         centerTitle: true,
         actions: [
           Padding(
-            padding:
-                const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
             child: ElevatedButton.icon(
               onPressed: () async {
                 await Navigator.push(
@@ -72,8 +71,7 @@ class _ProfileManagementScreenState extends State<ProfileManagementScreen> {
               },
               icon: const Icon(Icons.edit_outlined,
                   color: Colors.white, size: 18),
-              label: const Text("Edit",
-                  style: TextStyle(color: Colors.white)),
+              label: const Text("Edit", style: TextStyle(color: Colors.white)),
               style: ElevatedButton.styleFrom(
                 backgroundColor: themeColor,
                 shape: RoundedRectangleBorder(
@@ -144,24 +142,20 @@ class _ProfileManagementScreenState extends State<ProfileManagementScreen> {
       ),
       child: Column(
         children: [
-          CircleAvatar(
+          const CircleAvatar(
             radius: 45,
             backgroundColor: Colors.white,
-            child: Icon(Icons.person,
-                size: 50, color: themeColor),
+            child: Icon(Icons.person, size: 50, color: themeColor),
           ),
           const SizedBox(height: 10),
           Text(
             profile!.fullName,
             style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.white),
+                fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
           ),
           Text(
             user!.email!,
-            style: const TextStyle(
-                color: Colors.white70, fontSize: 13),
+            style: const TextStyle(color: Colors.white70, fontSize: 13),
           ),
         ],
       ),
@@ -198,24 +192,20 @@ class _ProfileManagementScreenState extends State<ProfileManagementScreen> {
     );
   }
 
-  Widget _infoRow(String label, String value,
-      {String? subtext}) {
+  Widget _infoRow(String label, String value, {String? subtext}) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 14),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label,
-              style:
-                  const TextStyle(fontSize: 12, color: Colors.grey)),
+          Text(label, style: const TextStyle(fontSize: 12, color: Colors.grey)),
           const SizedBox(height: 4),
           Text(value,
-              style: const TextStyle(
-                  fontSize: 15, fontWeight: FontWeight.w500)),
+              style:
+                  const TextStyle(fontSize: 15, fontWeight: FontWeight.w500)),
           if (subtext != null)
             Text(subtext,
-                style: const TextStyle(
-                    fontSize: 11, color: Colors.grey)),
+                style: const TextStyle(fontSize: 11, color: Colors.grey)),
         ],
       ),
     );
@@ -236,26 +226,22 @@ class _ProfileManagementScreenState extends State<ProfileManagementScreen> {
           const SizedBox(height: 12),
           _actionButton("Sign Out", onPressed: () async {
             await FirebaseAuth.instance.signOut();
-            Navigator.pushNamedAndRemoveUntil(
-                context, '/', (_) => false);
+            Navigator.pushNamedAndRemoveUntil(context, '/', (_) => false);
           }),
         ],
       ),
     );
   }
 
-  Widget _actionButton(String label,
-      {required VoidCallback onPressed}) {
+  Widget _actionButton(String label, {required VoidCallback onPressed}) {
     return SizedBox(
       width: double.infinity,
       child: OutlinedButton(
         onPressed: onPressed,
         style: OutlinedButton.styleFrom(
           alignment: Alignment.centerLeft,
-          padding: const EdgeInsets.symmetric(
-              vertical: 16, horizontal: 16),
-          shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8)),
+          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
         child: Text(label),
       ),

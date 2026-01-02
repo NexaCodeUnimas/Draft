@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:version0/models/user_profile.dart';
-
 
 class ProfileInputScreen extends StatefulWidget {
   final String userId;

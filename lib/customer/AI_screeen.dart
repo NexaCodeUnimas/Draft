@@ -1,9 +1,8 @@
-import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
-import 'widgets/app_bottom_nav.dart'; 
+import 'widgets/app_bottom_nav.dart';
+import 'package:firebase_ai/firebase_ai.dart';
 
 class GeminiChatApp extends StatelessWidget {
   const GeminiChatApp({super.key});
@@ -30,51 +29,47 @@ class _ChatScreenState extends State<ChatScreen> {
   bool isTyping = false;
   XFile? _selectedImage;
 
-  // Pick image from gallery
+  // Stable initialization of the model
+  late final GenerativeModel _model;
+
+  @override
+  void initState() {
+    super.initState();
+    // Use getInstance with googleAI() to match your Firebase Console setup
+    _model = FirebaseAI.googleAI().generativeModel(
+      model: 'gemini-2.5-flash',
+    );
+  }
+
   Future<void> _pickImage() async {
     final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
     if (image != null) {
-      setState(() {
-        _selectedImage = image;
-      });
+      setState(() => _selectedImage = image);
     }
   }
 
-  // Send message to Gemini API
   Future<String> sendToGemini(String userMessage, XFile? image) async {
-    const String apiKey = "YOUR_API_KEY_HERE"; // replace with your key
-
-    List<Map<String, dynamic>> parts = [
-      {"text": userMessage.isEmpty ? "What is in this image?" : userMessage},
-    ];
-
-    if (image != null) {
-      final bytes = await image.readAsBytes();
-      String base64Image = base64Encode(bytes);
-      parts.add({
-        "inline_data": {"mime_type": "image/jpeg", "data": base64Image},
-      });
-    }
-
-    final Map<String, dynamic> body = {
-      "contents": [
-        {"parts": parts}
-      ]
-    };
-
     try {
-      final response = await http.post(
-        Uri.parse(
-          "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=$apiKey",
-        ),
-        headers: {"Content-Type": "application/json"},
-        body: jsonEncode(body),
-      );
+      final List<Part> parts = [];
 
-      final data = jsonDecode(response.body);
-      return data["candidates"][0]["content"]["parts"][0]["text"];
+      if (userMessage.isNotEmpty) {
+        parts.add(TextPart(userMessage));
+      }
+
+      if (image != null) {
+        final bytes = await image.readAsBytes();
+        // Updated to use InlineDataPart for better compatibility
+        parts.add(InlineDataPart('image/jpeg', bytes));
+      }
+
+      if (parts.isEmpty) parts.add(TextPart("Hello!"));
+
+      final response = await _model.generateContent([Content.multi(parts)]);
+
+      return response.text ?? "I couldn't generate a response.";
     } catch (e) {
-      return "Error connecting to Gemini. Check your API key or internet.";
+      debugPrint("AI Error Details: $e");
+      return "Error: Check your Firebase setup. (Error: $e)";
     }
   }
 
@@ -126,7 +121,7 @@ class _ChatScreenState extends State<ChatScreen> {
       child: Padding(
         padding: EdgeInsets.all(12),
         child: Text(
-          "Gemini is thinking...",
+          "FloorBit AI is thinking...",
           style: TextStyle(fontStyle: FontStyle.italic, color: Colors.grey),
         ),
       ),
@@ -136,40 +131,11 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color.fromARGB(255, 238, 241, 238),
+      backgroundColor: const Color(0xFFF5F5F5),
       appBar: AppBar(
-        backgroundColor: const Color.fromARGB(255, 241, 160, 39),
-        foregroundColor: Colors.black,
-        toolbarHeight: 100,
+        backgroundColor: Colors.orange,
+        title: const Text("FloorBit AI", style: TextStyle(color: Colors.white)),
         centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: const [
-                Text(
-                  "FloorBit AI",
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22),
-                ),
-                SizedBox(width: 8),
-                Icon(Icons.auto_awesome, size: 24),
-              ],
-            ),
-            const Text(
-              "Powered by Gemini.com",
-              style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w400,
-                  color: Colors.black54,
-                  letterSpacing: 0.5),
-            ),
-          ],
-        ),
       ),
       body: Column(
         children: [
@@ -178,9 +144,8 @@ class _ChatScreenState extends State<ChatScreen> {
               controller: scrollController,
               itemCount: messages.length + (isTyping ? 1 : 0),
               itemBuilder: (context, index) {
-                if (isTyping && index == messages.length) {
+                if (isTyping && index == messages.length)
                   return typingIndicator();
-                }
 
                 final msg = messages[index];
                 bool isUser = msg["sender"] == "user";
@@ -190,36 +155,24 @@ class _ChatScreenState extends State<ChatScreen> {
                       isUser ? Alignment.centerRight : Alignment.centerLeft,
                   child: Container(
                     padding: const EdgeInsets.all(12),
-                    margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 10),
+                    margin:
+                        const EdgeInsets.symmetric(vertical: 4, horizontal: 10),
                     constraints: BoxConstraints(
-                      maxWidth: MediaQuery.of(context).size.width * 0.75,
-                    ),
+                        maxWidth: MediaQuery.of(context).size.width * 0.75),
                     decoration: BoxDecoration(
-                      color: isUser
-                          ? const Color.fromARGB(255, 240, 147, 86)
-                          : const Color.fromARGB(255, 239, 241, 240),
+                      color: isUser ? Colors.orange : Colors.grey[300],
                       borderRadius: BorderRadius.circular(15),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         if (msg["image"] != null)
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: 8.0),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(8),
-                              child: Image.file(msg["image"]),
-                            ),
-                          ),
-                        if (msg["text"] != null && msg["text"].isNotEmpty)
-                          Text(
-                            msg["text"],
-                            style: TextStyle(
-                              color: isUser
-                                  ? const Color.fromARGB(255, 240, 238, 237)
-                                  : Colors.black87,
-                            ),
-                          ),
+                          Image.file(msg["image"], height: 150),
+                        Text(
+                          msg["text"] ?? "",
+                          style: TextStyle(
+                              color: isUser ? Colors.white : Colors.black),
+                        ),
                       ],
                     ),
                   ),
@@ -228,56 +181,29 @@ class _ChatScreenState extends State<ChatScreen> {
             ),
           ),
           if (_selectedImage != null)
-            Container(
-              height: 100,
-              padding: const EdgeInsets.all(8),
-              color: const Color.fromARGB(255, 244, 247, 244),
-              child: Stack(
-                children: [
-                  Image.file(File(_selectedImage!.path)),
-                  Positioned(
-                    right: 0,
-                    top: 0,
-                    child: IconButton(
-                      icon: const Icon(Icons.cancel, color: Colors.red),
-                      onPressed: () => setState(() => _selectedImage = null),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            Image.file(File(_selectedImage!.path), height: 80),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              border: Border(top: BorderSide(color: Colors.black12)),
-            ),
+            padding: const EdgeInsets.all(8),
+            color: Colors.white,
             child: Row(
               children: [
                 IconButton(
-                  icon: const Icon(Icons.image, color: Colors.orangeAccent),
-                  onPressed: _pickImage,
-                ),
+                    icon: const Icon(Icons.image), onPressed: _pickImage),
                 Expanded(
                   child: TextField(
                     controller: controller,
-                    decoration: const InputDecoration(
-                      hintText: "Let our AI decide..",
-                      border: InputBorder.none,
-                    ),
+                    decoration:
+                        const InputDecoration(hintText: "Type a message..."),
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.send, color: Colors.orangeAccent),
-                  onPressed: sendMessage,
-                ),
+                    icon: const Icon(Icons.send), onPressed: sendMessage),
               ],
             ),
           ),
         ],
       ),
-
-      bottomNavigationBar: const AppBottomNav(currentIndex: 1), // AI tab
+      bottomNavigationBar: const AppBottomNav(currentIndex: 1),
     );
   }
 }

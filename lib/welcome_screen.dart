@@ -10,7 +10,7 @@ class WelcomeScreen extends StatelessWidget {
         child: SizedBox.expand(
           child: Column(
             children: [
-              Spacer(flex: 2), // top spacing
+              const Spacer(flex: 2), // top spacing
               const Icon(Icons.layers, size: 90, color: Colors.orange),
               const SizedBox(height: 20),
               const Text(
@@ -18,7 +18,7 @@ class WelcomeScreen extends StatelessWidget {
                 style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
                 textAlign: TextAlign.center,
               ),
-              Spacer(flex: 3), // space between text and buttons
+              const Spacer(flex: 3), // space between text and buttons
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
                 child: Column(
@@ -30,13 +30,14 @@ class WelcomeScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 12),
                     OutlinedButton(
-                      onPressed: () => Navigator.pushNamed(context, '/register'),
+                      onPressed: () =>
+                          Navigator.pushNamed(context, '/register'),
                       child: const Text("Register"),
                     ),
                   ],
                 ),
               ),
-              Spacer(flex: 2), // bottom spacing
+              const Spacer(flex: 2), // bottom spacing
             ],
           ),
         ),

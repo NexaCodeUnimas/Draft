@@ -7,7 +7,8 @@ class CustBookAppointmentScreen extends StatefulWidget {
   const CustBookAppointmentScreen({super.key});
 
   @override
-  State<CustBookAppointmentScreen> createState() => _CustBookAppointmentScreenState();
+  State<CustBookAppointmentScreen> createState() =>
+      _CustBookAppointmentScreenState();
 }
 
 class _CustBookAppointmentScreenState extends State<CustBookAppointmentScreen> {
@@ -21,8 +22,13 @@ class _CustBookAppointmentScreenState extends State<CustBookAppointmentScreen> {
   final TextEditingController notesController = TextEditingController();
 
   final List<String> timeSlots = [
-    "09:00 AM", "10:00 AM", "11:00 AM",
-    "01:00 PM", "02:00 PM", "03:00 PM", "04:00 PM"
+    "09:00 AM",
+    "10:00 AM",
+    "11:00 AM",
+    "01:00 PM",
+    "02:00 PM",
+    "03:00 PM",
+    "04:00 PM"
   ];
 
   Future<void> pickDate() async {
@@ -44,13 +50,15 @@ class _CustBookAppointmentScreenState extends State<CustBookAppointmentScreen> {
       'type': appointmentType,
       'date': selectedDate,
       'time': selectedTime,
-      'siteAddress': appointmentType == "Site Visit" ? siteAddressController.text : null,
+      'siteAddress':
+          appointmentType == "Site Visit" ? siteAddressController.text : null,
       'notes': notesController.text,
       'status': 'Upcoming',
       'createdAt': FieldValue.serverTimestamp(),
     });
 
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Appointment booked!")));
+    ScaffoldMessenger.of(context)
+        .showSnackBar(const SnackBar(content: Text("Appointment booked!")));
     Navigator.pop(context);
   }
 
@@ -67,29 +75,35 @@ class _CustBookAppointmentScreenState extends State<CustBookAppointmentScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Appointment Type
-            const Text("Appointment Type", style: TextStyle(fontWeight: FontWeight.bold)),
+            const Text("Appointment Type",
+                style: TextStyle(fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
             DropdownButtonFormField<String>(
-              value: appointmentType,
-              items: ["Consultation", "Site Visit"].map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+              initialValue: appointmentType,
+              items: ["Consultation", "Site Visit"]
+                  .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+                  .toList(),
               onChanged: (val) => setState(() => appointmentType = val!),
               decoration: InputDecoration(
                 filled: true,
                 fillColor: Colors.grey[100],
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                border:
+                    OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
               ),
             ),
             const SizedBox(height: 16),
 
             if (appointmentType == "Site Visit") ...[
-              const Text("Site Visit Address", style: TextStyle(fontWeight: FontWeight.bold)),
+              const Text("Site Visit Address",
+                  style: TextStyle(fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
               TextField(
                 controller: siteAddressController,
                 decoration: InputDecoration(
                   filled: true,
                   fillColor: Colors.grey[100],
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10)),
                   hintText: "Enter site address",
                 ),
               ),
@@ -97,12 +111,14 @@ class _CustBookAppointmentScreenState extends State<CustBookAppointmentScreen> {
             ],
 
             // Date picker
-            const Text("Select Date", style: TextStyle(fontWeight: FontWeight.bold)),
+            const Text("Select Date",
+                style: TextStyle(fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
             InkWell(
               onTap: pickDate,
               child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+                padding:
+                    const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
                 decoration: BoxDecoration(
                   color: Colors.grey[100],
                   borderRadius: BorderRadius.circular(10),
@@ -116,7 +132,8 @@ class _CustBookAppointmentScreenState extends State<CustBookAppointmentScreen> {
             const SizedBox(height: 16),
 
             // Time picker
-            const Text("Select Time", style: TextStyle(fontWeight: FontWeight.bold)),
+            const Text("Select Time",
+                style: TextStyle(fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
             Wrap(
               spacing: 8,
@@ -128,14 +145,16 @@ class _CustBookAppointmentScreenState extends State<CustBookAppointmentScreen> {
                   onSelected: (_) => setState(() => selectedTime = t),
                   selectedColor: themeColor,
                   backgroundColor: Colors.grey[200],
-                  labelStyle: TextStyle(color: isSelected ? Colors.white : Colors.black),
+                  labelStyle: TextStyle(
+                      color: isSelected ? Colors.white : Colors.black),
                 );
               }).toList(),
             ),
             const SizedBox(height: 16),
 
             // Additional Notes
-            const Text("Additional Notes", style: TextStyle(fontWeight: FontWeight.bold)),
+            const Text("Additional Notes",
+                style: TextStyle(fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
             TextField(
               controller: notesController,
@@ -143,7 +162,8 @@ class _CustBookAppointmentScreenState extends State<CustBookAppointmentScreen> {
               decoration: InputDecoration(
                 filled: true,
                 fillColor: Colors.grey[100],
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                border:
+                    OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
                 hintText: "Any special requirements?",
               ),
             ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
+import 'firebase_options.dart';
 
 // Customer Screens
 import 'customer/home_screen.dart';
@@ -29,7 +30,9 @@ import 'provider/cart_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   runApp(const FloorbitApp());
 }
 
@@ -39,41 +42,41 @@ class FloorbitApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => CartProvider()),
-      ],
-      child: MaterialApp(
-        debugShowCheckedModeBanner: false,
-        title: 'Floorbit',
-        theme: ThemeData(
-          useMaterial3: true,
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.orange),
-        ),
-        initialRoute: '/',
-        routes: {
-          // Auth & Welcome
-          '/': (context) => const WelcomeScreen(),
-          '/login': (context) => const LoginScreen(),
-          '/register': (context) => const RegisterScreen(),
+        providers: [
+          ChangeNotifierProvider(create: (_) => CartProvider()),
+        ],
+        child: MaterialApp(
+          debugShowCheckedModeBanner: false,
+          title: 'Floorbit',
+          theme: ThemeData(
+            useMaterial3: true,
+            colorScheme: ColorScheme.fromSeed(seedColor: Colors.orange),
+          ),
+          initialRoute: '/',
+          routes: {
+            // Auth & Welcome
+            '/': (context) => const WelcomeScreen(),
+            '/login': (context) => const LoginScreen(),
+            '/register': (context) => const RegisterScreen(),
 
-          // Customer
-          '/home': (context) => const HomeScreen(),
-          '/products': (context) => const ProductCataloguePage(),
-          '/product_details': (context) => const ProductDetailsPage(productId: ''), // Pass productId when navigating
-          '/cart': (context) => const CartScreen(),
-          '/checkout': (context) => const CheckoutScreen(),
-          '/profile_management': (context) => const ProfileManagementScreen(),
-          '/appointments_menu': (context) => const AppointmentMenuScreen(),
-          '/book_appointment': (context) => const CustBookAppointmentScreen(),
-          '/view_appointments': (context) => const ViewAppointmentsScreen(),
-          '/ai': (context) => const GeminiChatApp(),
-          '/orderhistory': (context) => const TrackOrdersScreen(),
+            // Customer
+            '/home': (context) => const HomeScreen(),
+            '/products': (context) => const ProductCataloguePage(),
+            '/product_details': (context) => const ProductDetailsPage(
+                productId: ''), // Pass productId when navigating
+            '/cart': (context) => const CartScreen(),
+            '/checkout': (context) => const CheckoutScreen(),
+            '/profile_management': (context) => const ProfileManagementScreen(),
+            '/appointments_menu': (context) => const AppointmentMenuScreen(),
+            '/book_appointment': (context) => const CustBookAppointmentScreen(),
+            '/view_appointments': (context) => const ViewAppointmentsScreen(),
+            '/ai': (context) => const GeminiChatApp(),
+            '/orderhistory': (context) => const TrackOrdersScreen(),
 
-          // Admin
-          '/admin_home': (context) => const AdminHomeScreen(),
-          '/admin_orders': (context) => const AdminOrdersPage(),
-        },
-      ),
-    );
+            // Admin
+            '/admin_home': (context) => const AdminHomeScreen(),
+            '/admin_orders': (context) => const AdminOrdersPage(),
+          },
+        ));
   }
 }
