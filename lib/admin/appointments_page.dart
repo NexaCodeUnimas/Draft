@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 
+import 'appointment_management_edit_page.dart';
+
 class AppointmentsPage extends StatefulWidget {
   const AppointmentsPage({super.key});
 
@@ -73,15 +75,31 @@ class _AppointmentsPageState extends State<AppointmentsPage> {
 
               const SizedBox(height: 16),
 
-              // 3. Appointment List Grouped by Date
+              // Appointment List Grouped by Date
               ListView.builder(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 itemCount: filteredDocs.length,
                 itemBuilder: (context, index) {
-                  final data = filteredDocs[index].data() as Map<String, dynamic>;
-                  return _buildAppointmentCard(data);
+                  final doc = filteredDocs[index]; // Get the document
+                  final data = doc.data() as Map<String, dynamic>;
+                  final appointmentId = doc.id; // Get the specific document ID
+
+                  return GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => AppointmentManagementEditPage(
+                            appointmentId: appointmentId,
+                            appointmentData: data,
+                          ),
+                        ),
+                      );
+                    },
+                    child: _buildAppointmentCard(data),
+                  );
                 },
               ),
             ],

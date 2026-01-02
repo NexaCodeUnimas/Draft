@@ -23,7 +23,7 @@ class _CustomersPageState extends State<CustomersPage> {
 
         final docs = snapshot.data!.docs;
 
-        // Basic stats calculation based on Firestore data
+
         int totalCustomers = docs.length;
 
         // Filter list for search
@@ -71,7 +71,7 @@ class _CustomersPageState extends State<CustomersPage> {
 
               const SizedBox(height: 16),
 
-              // 3. Customer List builder
+              //Customer List builder
               ListView.builder(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
