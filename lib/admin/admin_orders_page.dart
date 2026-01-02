@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class AdminOrdersPage extends StatefulWidget {
+class AdminOrdersPage extends StatefulWidget {
   const AdminOrdersPage({super.key});
 
   @override
@@ -10,7 +11,15 @@ class AdminOrdersPage extends StatefulWidget {
 
 class _AdminOrdersPageState extends State<AdminOrdersPage> {
   @override
+  State<AdminOrdersPage> createState() => _AdminOrdersPageState();
+}
+
+class _AdminOrdersPageState extends State<AdminOrdersPage> {
+  @override
   Widget build(BuildContext context) {
+    final ordersQuery = FirebaseFirestore.instance
+        .collection('orders')
+        .orderBy('timestamp', descending: true);
     final ordersQuery = FirebaseFirestore.instance
         .collection('orders')
         .orderBy('timestamp', descending: true);
