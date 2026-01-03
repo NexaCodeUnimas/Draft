@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
-import 'widgets/app_bottom_nav.dart'; 
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'widgets/app_bottom_nav.dart';
+import 'notifications_page.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -16,7 +19,7 @@ class _HomeScreenState extends State<HomeScreen> {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            // Header Section
+            // --- HEADER SECTION ---
             Container(
               width: double.infinity,
               padding: const EdgeInsets.fromLTRB(20, 50, 20, 30),
@@ -45,21 +48,71 @@ class _HomeScreenState extends State<HomeScreen> {
                           color: Colors.white,
                         ),
                       ),
-                      GestureDetector(
-                        onTap: () =>
-                            Navigator.pushNamed(context, '/profile_management'),
-                        child: const CircleAvatar(
-                          backgroundColor: Colors.white,
-                          child: Icon(Icons.person, color: Colors.orange),
-                        ),
+                      Row(
+                        children: [
+                          // --- NOTIFICATIONS BELL WITH RED DOT ---
+                          StreamBuilder<QuerySnapshot>(
+                            stream: FirebaseFirestore.instance
+                                .collection('notifications')
+                                .where('userId', isEqualTo: FirebaseAuth.instance.currentUser?.uid)
+                                .where('isRead', isEqualTo: false)
+                                .snapshots(),
+                            builder: (context, snapshot) {
+                              int unreadCount = 0;
+                              if (snapshot.hasData) {
+                                unreadCount = snapshot.data!.docs.length;
+                              }
+                              return Stack(
+                                children: [
+                                  IconButton(
+                                    icon: const Icon(Icons.notifications, color: Colors.white),
+                                    onPressed: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) => const NotificationsPage(),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                  if (unreadCount > 0)
+                                    Positioned(
+                                      right: 6,
+                                      top: 6,
+                                      child: Container(
+                                        width: 10,
+                                        height: 10,
+                                        decoration: BoxDecoration(
+                                          color: Colors.red,
+                                          shape: BoxShape.circle,
+                                        ),
+                                      ),
+                                    ),
+                                ],
+                              );
+                            },
+                          ),
+
+                          // --- PROFILE BUTTON ---
+                          GestureDetector(
+                            onTap: () =>
+                                Navigator.pushNamed(context, '/profile_management'),
+                            child: const CircleAvatar(
+                              backgroundColor: Colors.white,
+                              child: Icon(Icons.person, color: Colors.orange),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
+
                   const SizedBox(height: 8),
                   const Text(
                     "Premium flooring solutions at your fingertips",
                     style: TextStyle(color: Colors.white70),
                   ),
+
                   const SizedBox(height: 20),
                   Container(
                     padding: const EdgeInsets.all(16),
@@ -85,7 +138,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
             const SizedBox(height: 20),
 
-            // Action Cards
+            // --- ACTION CARDS ---
             _ActionCard(
               icon: Icons.store,
               title: "Browse Products",
@@ -122,7 +175,7 @@ class _HomeScreenState extends State<HomeScreen> {
         child: const Icon(Icons.shopping_cart),
       ),
 
-      bottomNavigationBar: const AppBottomNav(currentIndex: 0), // <-- Correct
+      bottomNavigationBar: const AppBottomNav(currentIndex: 0),
     );
   }
 }
@@ -158,8 +211,7 @@ class _ActionCard extends StatelessWidget {
             ),
             child: Icon(icon, color: Colors.orange),
           ),
-          title:
-              Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
+          title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
           subtitle: Text(subtitle),
           trailing: const Icon(Icons.chevron_right),
           onTap: onTap,

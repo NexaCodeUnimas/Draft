@@ -85,7 +85,7 @@ class AppointmentManagementEditPage extends StatelessWidget {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton.icon(
-                    onPressed: () => _markAsCompleted(context),
+                    onPressed: () => _markAsCompleted(context, uid, formattedDate),
                     icon: const Icon(Icons.check, color: Colors.white),
                     label: const Text("Mark as Completed", style: TextStyle(color: Colors.white)),
                     style: ElevatedButton.styleFrom(
@@ -98,7 +98,7 @@ class AppointmentManagementEditPage extends StatelessWidget {
                 SizedBox(
                   width: double.infinity,
                   child: OutlinedButton.icon(
-                    onPressed: () => _rescheduleAppointment(context),
+                    onPressed: () => _rescheduleAppointment(context, uid),
                     icon: const Icon(Icons.edit_note),
                     label: const Text("Reschedule"),
                     style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 12)),
@@ -111,13 +111,13 @@ class AppointmentManagementEditPage extends StatelessWidget {
       ),
     );
   }
-  //reschedule logic
-  Future<void> _rescheduleAppointment(BuildContext context) async {
-    // 1. Pick a New Date
+
+  // ----------------- RESCHEDULE LOGIC -----------------
+  Future<void> _rescheduleAppointment(BuildContext context, String uid) async {
     DateTime? pickedDate = await showDatePicker(
       context: context,
       initialDate: DateTime.now(),
-      firstDate: DateTime.now(), // Prevent rescheduling to the past
+      firstDate: DateTime.now(),
       lastDate: DateTime(2100),
       builder: (context, child) {
         return Theme(
@@ -131,7 +131,6 @@ class AppointmentManagementEditPage extends StatelessWidget {
 
     if (pickedDate == null) return;
 
-    // 2. Pick a New Time
     TimeOfDay? pickedTime = await showTimePicker(
       context: context,
       initialTime: TimeOfDay.now(),
@@ -139,25 +138,31 @@ class AppointmentManagementEditPage extends StatelessWidget {
 
     if (pickedTime == null) return;
 
-    final now = DateTime.now();
-    final dt = DateTime(now.year, now.month, now.day, pickedTime.hour, pickedTime.minute);
+    final dt = DateTime(pickedDate.year, pickedDate.month, pickedDate.day, pickedTime.hour, pickedTime.minute);
     String formattedTime = DateFormat('hh:mm a').format(dt);
+    String formattedDate = DateFormat('EEEE, MMMM d, y').format(pickedDate);
 
-    // Update
     try {
-      await FirebaseFirestore.instance
-          .collection('appointments')
-          .doc(appointmentId)
-          .update({
+      // Update appointment
+      await FirebaseFirestore.instance.collection('appointments').doc(appointmentId).update({
         'date': Timestamp.fromDate(pickedDate),
         'time': formattedTime,
-        'status': 'Rescheduled', // Optional: Change status to reflect change
+        'status': 'Rescheduled',
+      });
+
+      // --- Add notification ---
+      await FirebaseFirestore.instance.collection('notifications').add({
+        'userId': uid,
+        'title': 'Appointment Rescheduled',
+        'body': 'Your appointment on $formattedDate at $formattedTime has been rescheduled.',
+        'isRead': false,
+        'timestamp': FieldValue.serverTimestamp(),
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Appointment rescheduled successfully!")),
       );
-      Navigator.pop(context); // Return to the list
+      Navigator.pop(context);
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Failed to reschedule: $e")),
@@ -165,20 +170,26 @@ class AppointmentManagementEditPage extends StatelessWidget {
     }
   }
 
-
-
-  // change status func
-  Future<void> _markAsCompleted(BuildContext context) async {
+  // ----------------- MARK AS COMPLETED -----------------
+  Future<void> _markAsCompleted(BuildContext context, String uid, String formattedDate) async {
     try {
-      await FirebaseFirestore.instance
-          .collection('appointments')
-          .doc(appointmentId)
-          .update({'status': 'Completed'}); // Update the status field
+      await FirebaseFirestore.instance.collection('appointments').doc(appointmentId).update({
+        'status': 'Completed',
+      });
+
+      // --- Add notification ---
+      await FirebaseFirestore.instance.collection('notifications').add({
+        'userId': uid,
+        'title': 'Appointment Completed',
+        'body': 'Your appointment on $formattedDate at ${appointmentData['time']} has been marked as completed.',
+        'isRead': false,
+        'timestamp': FieldValue.serverTimestamp(),
+      });
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Appointment marked as completed!")),
       );
-      Navigator.pop(context); // Go back to the list page
+      Navigator.pop(context);
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Failed to update: $e")),
@@ -186,6 +197,7 @@ class AppointmentManagementEditPage extends StatelessWidget {
     }
   }
 
+  // ----------------- UI HELPERS -----------------
   Widget _infoRow(String label, String value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
@@ -223,3 +235,4 @@ class AppointmentManagementEditPage extends StatelessWidget {
     );
   }
 }
+

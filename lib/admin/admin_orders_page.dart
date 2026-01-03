@@ -36,14 +36,17 @@ class _AdminOrdersPageState extends State<AdminOrdersPage> {
           itemBuilder: (context, index) {
             final order = orders[index];
             final data = order.data() as Map<String, dynamic>;
+
             final items = data['items'] as List<dynamic>? ?? [];
             final total = (data['total'] as num?)?.toDouble() ?? 0.0;
+            final status = data['status'] ?? 'pending';
+            final userId = data['userId'];
+
             final timestamp =
                 (data['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now();
             final formattedDate =
-                "${timestamp.year}-${timestamp.month.toString().padLeft(2,'0')}-${timestamp.day.toString().padLeft(2,'0')} ${timestamp.hour.toString().padLeft(2,'0')}:${timestamp.minute.toString().padLeft(2,'0')}";
-            final status = data['status'] ?? 'pending';
-            final userId = data['userId'];
+                "${timestamp.year}-${timestamp.month.toString().padLeft(2, '0')}-${timestamp.day.toString().padLeft(2, '0')} "
+                "${timestamp.hour.toString().padLeft(2, '0')}:${timestamp.minute.toString().padLeft(2, '0')}";
 
             return Card(
               margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
@@ -54,7 +57,7 @@ class _AdminOrdersPageState extends State<AdminOrdersPage> {
               child: Padding(
                 padding: const EdgeInsets.all(12),
                 child: ExpansionTile(
-                  tilePadding: const EdgeInsets.symmetric(horizontal: 0),
+                  tilePadding: EdgeInsets.zero,
                   title: Row(
                     children: [
                       Expanded(
@@ -64,54 +67,58 @@ class _AdminOrdersPageState extends State<AdminOrdersPage> {
                             Text(
                               "Order #${order.id}",
                               style: const TextStyle(
-                                  fontWeight: FontWeight.bold, fontSize: 16),
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
                               overflow: TextOverflow.ellipsis,
                             ),
                             const SizedBox(height: 4),
+
+                            /// CUSTOMER EMAIL
                             FutureBuilder<DocumentSnapshot>(
                               future: FirebaseFirestore.instance
                                   .collection('profiles')
                                   .doc(userId)
                                   .get(),
                               builder: (context, userSnapshot) {
-                                String userEmail = "Unknown User";
+                                String email = "Unknown User";
                                 if (userSnapshot.hasData &&
                                     userSnapshot.data!.exists) {
-                                  final userData =
-                                      userSnapshot.data!.data() as Map<String, dynamic>;
-                                  userEmail = userData['email'] ??
-                                      userData['userId'] ??
-                                      'Unknown User';
-                                } else if (userSnapshot.hasError) {
-                                  userEmail = "Error loading user";
+                                  final userData = userSnapshot.data!.data()
+                                      as Map<String, dynamic>;
+                                  email = userData['email'] ?? email;
                                 }
                                 return Text(
-                                  "By: $userEmail",
+                                  "By: $email",
                                   style: TextStyle(
-                                      color: Colors.grey.shade600, fontSize: 13),
+                                    color: Colors.grey.shade600,
+                                    fontSize: 13,
+                                  ),
                                   overflow: TextOverflow.ellipsis,
                                 );
                               },
                             ),
+
                             const SizedBox(height: 2),
                             Text(
                               "Date: $formattedDate",
                               style: TextStyle(
-                                  color: Colors.grey.shade500, fontSize: 12),
-                              overflow: TextOverflow.ellipsis,
+                                color: Colors.grey.shade500,
+                                fontSize: 12,
+                              ),
                             ),
                           ],
                         ),
                       ),
-                      const SizedBox(width: 8),
-                      IntrinsicWidth(
-                        child: _statusDropdown(order.reference, status),
-                      ),
+
+                      /// STATUS DROPDOWN
+                      _statusDropdown(order.reference, status),
                     ],
                   ),
                   children: [
                     const Divider(),
-                    // Items list as cards
+
+                    /// ORDER ITEMS
                     Column(
                       children: items.map((item) {
                         final productId = item['productId'];
@@ -127,21 +134,21 @@ class _AdminOrdersPageState extends State<AdminOrdersPage> {
                             String productName = productId ?? 'Unknown';
                             if (productSnapshot.hasData &&
                                 productSnapshot.data!.exists) {
-                              final productData =
-                                  productSnapshot.data!.data() as Map<String, dynamic>;
-                              productName = productData['name'] ?? productId;
-                            } else if (productSnapshot.hasError) {
-                              productName = 'Error loading';
+                              final productData = productSnapshot.data!.data()
+                                  as Map<String, dynamic>;
+                              productName =
+                                  productData['name'] ?? productName;
                             }
 
                             return Container(
-                              width: double.infinity,
                               margin: const EdgeInsets.symmetric(vertical: 4),
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
                                 color: Colors.grey.shade50,
                                 borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: Colors.grey.shade300),
+                                border: Border.all(
+                                  color: Colors.grey.shade300,
+                                ),
                               ),
                               child: Row(
                                 mainAxisAlignment:
@@ -168,16 +175,18 @@ class _AdminOrdersPageState extends State<AdminOrdersPage> {
                         );
                       }).toList(),
                     ),
+
                     const SizedBox(height: 8),
                     Align(
                       alignment: Alignment.centerRight,
                       child: Text(
                         "Total: RM ${total.toStringAsFixed(2)}",
                         style: const TextStyle(
-                            fontWeight: FontWeight.bold, fontSize: 16),
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
                       ),
                     ),
-                    const SizedBox(height: 8),
                   ],
                 ),
               ),
@@ -188,7 +197,11 @@ class _AdminOrdersPageState extends State<AdminOrdersPage> {
     );
   }
 
-  Widget _statusDropdown(DocumentReference orderRef, String currentStatus) {
+  /// 🔔 STATUS DROPDOWN WITH NOTIFICATION CREATION
+  Widget _statusDropdown(
+    DocumentReference orderRef,
+    String currentStatus,
+  ) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
@@ -201,14 +214,36 @@ class _AdminOrdersPageState extends State<AdminOrdersPage> {
         child: DropdownButton<String>(
           value: currentStatus,
           isDense: true,
-          icon: const Icon(Icons.arrow_drop_down),
           items: const [
             DropdownMenuItem(value: 'pending', child: Text('Pending')),
             DropdownMenuItem(value: 'complete', child: Text('Complete')),
           ],
-          onChanged: (value) {
-            if (value != null) {
-              orderRef.update({'status': value});
+          onChanged: (value) async {
+            if (value == null || value == currentStatus) return;
+
+            try {
+              final orderSnap = await orderRef.get();
+              final orderData = orderSnap.data() as Map<String, dynamic>;
+              final userId = orderData['userId'];
+
+              // 1️⃣ Update order
+              await orderRef.update({'status': value});
+
+              // 2️⃣ Create notification
+              await FirebaseFirestore.instance
+                  .collection('notifications')
+                  .add({
+                'userId': userId,
+                'title': 'Order Update',
+                'body':
+                    'Your order has been marked as "${value.toUpperCase()}".',
+                'type': 'order',
+                'orderId': orderRef.id,
+                'isRead': false,
+                'timestamp': FieldValue.serverTimestamp(),
+              });
+            } catch (e) {
+              debugPrint('Order update failed: $e');
             }
           },
         ),
