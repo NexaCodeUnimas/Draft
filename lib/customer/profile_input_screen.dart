@@ -72,6 +72,7 @@ class _ProfileInputScreenState extends State<ProfileInputScreen> {
                       'city': _city.text.trim(),
                       'state': _state.text.trim(),
                       'zip': _zip.text.trim(),
+                      'registeredDate': FieldValue.serverTimestamp(),
                     });
                     Navigator.pushReplacementNamed(context, '/home');
                   }
