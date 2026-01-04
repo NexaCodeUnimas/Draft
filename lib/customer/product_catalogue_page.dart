@@ -250,7 +250,7 @@ class _ProductCataloguePageState extends State<ProductCataloguePage> {
         child: const Icon(Icons.shopping_cart),
       ),
 
-      bottomNavigationBar: const AppBottomNav(currentIndex: 0), // Products tab
+      bottomNavigationBar: const AppBottomNav(currentIndex: 1), // Products tab
     );
   }
 }
