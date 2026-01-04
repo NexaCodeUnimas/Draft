@@ -1,19 +1,100 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:intl/intl.dart';
+import 'package:version0/services/sales_report_service.dart';
 
-class DashboardPage extends StatelessWidget {
+class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
 
   @override
+  State<DashboardPage> createState() => _DashboardPageState();
+}
+
+class _DashboardPageState extends State<DashboardPage> {
+  // Default range: last 30 days
+  DateTimeRange _selectedRange = DateTimeRange(
+    start: DateTime.now().subtract(const Duration(days: 30)),
+    end: DateTime.now(),
+  );
+
+  @override
   Widget build(BuildContext context) {
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: const [
-        OrdersAndRevenueSection(),
-        PendingAppointmentsSection(),
-        CustomersSection(),
-      ],
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('orders')
+          .where('timestamp', isGreaterThanOrEqualTo: _selectedRange.start)
+          .where('timestamp', isLessThanOrEqualTo: _selectedRange.end)
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
+
+        final docs = snapshot.data!.docs;
+
+        return ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            _buildReportHeader(docs),
+            const SizedBox(height: 20),
+            const OrdersAndRevenueSection(),
+            const PendingAppointmentsSection(),
+            const CustomersSection(),
+          ],
+        );
+      },
     );
+  }
+
+  Widget _buildReportHeader(List<QueryDocumentSnapshot> docs) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text("Sales Reporting", style: TextStyle(fontWeight: FontWeight.bold)),
+                TextButton.icon(
+                  onPressed: _selectDateRange,
+                  icon: const Icon(Icons.date_range),
+                  label: Text("${DateFormat('MMM d').format(_selectedRange.start)} - ${DateFormat('MMM d').format(_selectedRange.end)}"),
+                ),
+              ],
+            ),
+            const Divider(),
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () => SalesReportService.exportPdf(docs, _selectedRange),
+                    icon: const Icon(Icons.picture_as_pdf),
+                    label: const Text("PDF"),
+                    style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () => SalesReportService.exportCsv(docs),
+                    icon: const Icon(Icons.table_chart),
+                    label: const Text("CSV"),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _selectDateRange() async {
+    final range = await showDateRangePicker(
+      context: context,
+      firstDate: DateTime(2024),
+      lastDate: DateTime.now().add(const Duration(days: 1)),
+    );
+    if (range != null) setState(() => _selectedRange = range);
   }
 }
 
@@ -209,3 +290,4 @@ class StatCard extends StatelessWidget {
     );
   }
 }
+
