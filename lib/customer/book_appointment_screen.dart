@@ -66,8 +66,17 @@ class _CustBookAppointmentScreenState extends State<CustBookAppointmentScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Book Appointment"),
         backgroundColor: themeColor,
+        centerTitle: true,
+        title: const Text(
+          "Book Appointment",
+          style: TextStyle(color: Colors.white),
+        ),
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Navigator.pop(context),
+        ),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
