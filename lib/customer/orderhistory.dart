@@ -112,7 +112,7 @@ class _TrackOrdersScreenState extends State<TrackOrdersScreen> {
       // ====================
       // Bottom Navigation
       // ====================
-      bottomNavigationBar: const AppBottomNav(currentIndex: 3), // Orders tab
+      bottomNavigationBar: const AppBottomNav(currentIndex: 4), // Orders tab
     );
   }
 }

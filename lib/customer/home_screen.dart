@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+
 import 'widgets/app_bottom_nav.dart';
 import 'notifications_page.dart';
 
@@ -16,10 +17,11 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF6F6F6),
+
       body: SingleChildScrollView(
         child: Column(
           children: [
-            // --- HEADER SECTION ---
+            // ================= HEADER =================
             Container(
               width: double.infinity,
               padding: const EdgeInsets.fromLTRB(20, 50, 20, 30),
@@ -41,36 +43,44 @@ class _HomeScreenState extends State<HomeScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       const Text(
-                        "Floorbit",
+                        'Floorbit',
                         style: TextStyle(
                           fontSize: 22,
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
                         ),
                       ),
+
                       Row(
                         children: [
-                          // --- NOTIFICATIONS BELL WITH RED DOT ---
+                          // ============ NOTIFICATIONS ============
                           StreamBuilder<QuerySnapshot>(
                             stream: FirebaseFirestore.instance
                                 .collection('notifications')
-                                .where('userId', isEqualTo: FirebaseAuth.instance.currentUser?.uid)
+                                .where(
+                                  'userId',
+                                  isEqualTo: FirebaseAuth
+                                      .instance.currentUser?.uid,
+                                )
                                 .where('isRead', isEqualTo: false)
                                 .snapshots(),
                             builder: (context, snapshot) {
-                              int unreadCount = 0;
-                              if (snapshot.hasData) {
-                                unreadCount = snapshot.data!.docs.length;
-                              }
+                              final unreadCount =
+                                  snapshot.hasData ? snapshot.data!.docs.length : 0;
+
                               return Stack(
                                 children: [
                                   IconButton(
-                                    icon: const Icon(Icons.notifications, color: Colors.white),
+                                    icon: const Icon(
+                                      Icons.notifications,
+                                      color: Colors.white,
+                                    ),
                                     onPressed: () {
                                       Navigator.push(
                                         context,
                                         MaterialPageRoute(
-                                          builder: (_) => const NotificationsPage(),
+                                          builder: (_) =>
+                                              const NotificationsPage(),
                                         ),
                                       );
                                     },
@@ -82,7 +92,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                       child: Container(
                                         width: 10,
                                         height: 10,
-                                        decoration: BoxDecoration(
+                                        decoration: const BoxDecoration(
                                           color: Colors.red,
                                           shape: BoxShape.circle,
                                         ),
@@ -93,10 +103,12 @@ class _HomeScreenState extends State<HomeScreen> {
                             },
                           ),
 
-                          // --- PROFILE BUTTON ---
+                          // ============ PROFILE ============
                           GestureDetector(
-                            onTap: () =>
-                                Navigator.pushNamed(context, '/profile_management'),
+                            onTap: () => Navigator.pushNamed(
+                              context,
+                              '/profile_management',
+                            ),
                             child: const CircleAvatar(
                               backgroundColor: Colors.white,
                               child: Icon(Icons.person, color: Colors.orange),
@@ -109,11 +121,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
                   const SizedBox(height: 8),
                   const Text(
-                    "Premium flooring solutions at your fingertips",
+                    'Premium flooring solutions at your fingertips',
                     style: TextStyle(color: Colors.white70),
                   ),
 
                   const SizedBox(height: 20),
+
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
@@ -124,7 +137,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       children: [
                         Expanded(
                           child: Text(
-                            "What would you like to do today?",
+                            'What would you like to do today?',
                             style: TextStyle(fontSize: 16),
                           ),
                         ),
@@ -138,30 +151,32 @@ class _HomeScreenState extends State<HomeScreen> {
 
             const SizedBox(height: 20),
 
-            // --- ACTION CARDS ---
+            // ================= ACTION CARDS =================
             _ActionCard(
               icon: Icons.store,
-              title: "Browse Products",
-              subtitle: "Explore our premium flooring collection",
+              title: 'Browse Products',
+              subtitle: 'Explore our premium flooring collection',
               onTap: () => Navigator.pushNamed(context, '/products'),
             ),
             _ActionCard(
               icon: Icons.auto_awesome,
-              title: "AI Assistance",
-              subtitle: "AI-powered visualization & recommendations",
+              title: 'AI Assistance',
+              subtitle: 'AI-powered visualization & recommendations',
               onTap: () => Navigator.pushNamed(context, '/ai'),
             ),
             _ActionCard(
               icon: Icons.calendar_month,
-              title: "Appointments",
-              subtitle: "Book or view appointments",
-              onTap: () => Navigator.pushNamed(context, '/appointments_menu'),
+              title: 'Appointments',
+              subtitle: 'Book or view appointments',
+              onTap: () =>
+                  Navigator.pushNamed(context, '/appointments_menu'),
             ),
             _ActionCard(
               icon: Icons.local_shipping,
-              title: "Track Orders",
-              subtitle: "Monitor your delivery status",
-              onTap: () => Navigator.pushNamed(context, '/orderhistory'),
+              title: 'Track Orders',
+              subtitle: 'Monitor your delivery status',
+              onTap: () =>
+                  Navigator.pushNamed(context, '/orderhistory'),
             ),
 
             const SizedBox(height: 80),
@@ -169,17 +184,20 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
 
+      // ================= CART FAB =================
       floatingActionButton: FloatingActionButton(
         backgroundColor: Colors.orange,
         onPressed: () => Navigator.pushNamed(context, '/cart'),
         child: const Icon(Icons.shopping_cart),
       ),
 
+      // ================= BOTTOM NAV =================
       bottomNavigationBar: const AppBottomNav(currentIndex: 0),
     );
   }
 }
 
+// ================= ACTION CARD WIDGET =================
 class _ActionCard extends StatelessWidget {
   final IconData icon;
   final String title;
@@ -211,7 +229,10 @@ class _ActionCard extends StatelessWidget {
             ),
             child: Icon(icon, color: Colors.orange),
           ),
-          title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
+          title: Text(
+            title,
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
           subtitle: Text(subtitle),
           trailing: const Icon(Icons.chevron_right),
           onTap: onTap,

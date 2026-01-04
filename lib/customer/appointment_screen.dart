@@ -27,8 +27,8 @@ class AppointmentMenuScreen extends StatelessWidget {
         ],
       ),
 
-      bottomNavigationBar: const AppBottomNav(currentIndex: 2),
-      // index 2 = Appointments tab
+      bottomNavigationBar: const AppBottomNav(currentIndex: 3),
+      
     );
   }
 }
