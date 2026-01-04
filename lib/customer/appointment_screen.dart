@@ -14,7 +14,8 @@ class AppointmentMenuScreen extends StatelessWidget {
           style: TextStyle(color: Colors.white),
         ),
         backgroundColor: Colors.orange, 
-        centerTitle: true, 
+        centerTitle: true,
+        automaticallyImplyLeading: false, 
       ),
       body: Padding(
         padding: const EdgeInsets.all(20), 

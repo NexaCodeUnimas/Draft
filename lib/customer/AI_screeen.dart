@@ -129,6 +129,7 @@ class _ChatScreenState extends State<ChatScreen> {
         backgroundColor: Colors.orange,
         title: const Text("FloorBit AI", style: TextStyle(color: Colors.white)),
         centerTitle: true,
+        automaticallyImplyLeading: false, 
       ),
       body: Column(
         children: [
@@ -189,7 +190,7 @@ class _ChatScreenState extends State<ChatScreen> {
           ),
         ],
       ),
-      // Bottom nav using Option A behavior
+      
       bottomNavigationBar: const AppBottomNav(currentIndex: 2),
     );
   }
