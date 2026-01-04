@@ -6,33 +6,29 @@ import 'package:printing/printing.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 
-
 class CustomerInvoiceService {
   // --- Generate Customer Invoice PDF ---
   static Future<void> printInvoice(DocumentSnapshot orderDoc) async {
     final data = orderDoc.data() as Map<String, dynamic>;
     final pdf = pw.Document();
-    
+
     final orderDate = (data['timestamp'] as Timestamp).toDate();
     final items = data['items'] as List<dynamic>? ?? [];
-    final total = (data['total'] as num?)?.toDouble() ?? 0.0;
-    final subtotal = (data['subtotal'] as num?)?.toDouble() ?? total;
-    final tax = (data['tax'] as num?)?.toDouble() ?? 0.0;
-    
+    final total = _parsePrice(data['total']);
+    final subtotal = _parsePrice(data['subtotal'], fallback: total);
+    final tax = _parsePrice(data['tax']);
+
     // Build items table (async)
     final itemsTable = await _buildItemsTable(items);
-    
+
     pdf.addPage(
       pw.Page(
         pageFormat: PdfPageFormat.a4,
         build: (context) => pw.Column(
           crossAxisAlignment: pw.CrossAxisAlignment.start,
           children: [
-            // Header
             _buildHeader(orderDoc.id),
             pw.SizedBox(height: 20),
-            
-            // Company & Customer Info
             pw.Row(
               mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
               crossAxisAlignment: pw.CrossAxisAlignment.start,
@@ -42,8 +38,6 @@ class CustomerInvoiceService {
               ],
             ),
             pw.SizedBox(height: 20),
-            
-            // Invoice Details
             pw.Row(
               mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
               children: [
@@ -52,35 +46,35 @@ class CustomerInvoiceService {
               ],
             ),
             pw.SizedBox(height: 20),
-            
-            // Items Table
             itemsTable,
             pw.SizedBox(height: 20),
-            
-            // Totals
             _buildTotals(subtotal, tax, total),
             pw.Spacer(),
-            
-            // Footer
             _buildFooter(),
           ],
         ),
       ),
     );
-    
+
     await Printing.layoutPdf(
       onLayout: (format) async => pdf.save(),
       name: 'invoice_${orderDoc.id}.pdf',
     );
   }
 
+  // --- Safe price parser ---
+  static double _parsePrice(dynamic rawPrice, {double fallback = 0.0}) {
+    if (rawPrice == null) return fallback;
+    if (rawPrice is num) return rawPrice.toDouble();
+    if (rawPrice is String) return double.tryParse(rawPrice) ?? fallback;
+    return fallback;
+  }
+
   // --- Helper: Build Header ---
   static pw.Widget _buildHeader(String docNumber) {
     return pw.Container(
       padding: const pw.EdgeInsets.all(15),
-      decoration: const pw.BoxDecoration(
-        color: PdfColors.blue900,
-      ),
+      decoration: const pw.BoxDecoration(color: PdfColors.blue900),
       child: pw.Row(
         mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
         children: [
@@ -89,18 +83,11 @@ class CustomerInvoiceService {
             children: [
               pw.Text(
                 'INVOICE',
-                style: pw.TextStyle(
-                  fontSize: 28,
-                  fontWeight: pw.FontWeight.bold,
-                  color: PdfColors.white,
-                ),
+                style: pw.TextStyle(fontSize: 28, fontWeight: pw.FontWeight.bold, color: PdfColors.white),
               ),
               pw.Text(
                 '#$docNumber',
-                style: const pw.TextStyle(
-                  fontSize: 12,
-                  color: PdfColors.white,
-                ),
+                style: const pw.TextStyle(fontSize: 12, color: PdfColors.white),
               ),
             ],
           ),
@@ -137,12 +124,9 @@ class CustomerInvoiceService {
           pw.Text('BILL TO:', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 11)),
           pw.SizedBox(height: 8),
           pw.Text(data['customerName'] ?? 'Customer', style: const pw.TextStyle(fontSize: 12)),
-          if (data['customerEmail'] != null)
-            pw.Text(data['customerEmail'], style: const pw.TextStyle(fontSize: 10)),
-          if (data['customerPhone'] != null)
-            pw.Text(data['customerPhone'], style: const pw.TextStyle(fontSize: 10)),
-          if (data['deliveryAddress'] != null)
-            pw.Text(data['deliveryAddress'], style: const pw.TextStyle(fontSize: 10)),
+          if (data['customerEmail'] != null) pw.Text(data['customerEmail'], style: const pw.TextStyle(fontSize: 10)),
+          if (data['customerPhone'] != null) pw.Text(data['customerPhone'], style: const pw.TextStyle(fontSize: 10)),
+          if (data['deliveryAddress'] != null) pw.Text(data['deliveryAddress'], style: const pw.TextStyle(fontSize: 10)),
         ],
       ),
     );
@@ -154,28 +138,26 @@ class CustomerInvoiceService {
       ['Item', 'Quantity', 'Unit Price (RM)', 'Total (RM)']
     ];
 
-    // Fetch product names from Firestore
     for (var item in items) {
       final productId = item['productId'];
       final qty = ((item['quantity'] as num?)?.toInt() ?? 1);
-      final price = ((item['price'] as num?)?.toDouble() ?? 0.0);
-      final itemTotal = qty * price;
+      double price = _parsePrice(item['price']); // read from item if present
+      double itemTotal = 0;
 
       String productName = 'Unknown Product';
-      
+
       try {
-        final doc = await FirebaseFirestore.instance
-            .collection('products')
-            .doc(productId)
-            .get();
-        
+        final doc = await FirebaseFirestore.instance.collection('products').doc(productId).get();
         if (doc.exists) {
-          final data = doc.data() as Map<String, dynamic>?;
-          productName = data?['name'] ?? 'Unknown Product';
+          final productData = doc.data() as Map<String, dynamic>?;
+          productName = productData?['name'] ?? 'Unknown Product';
+          price = _parsePrice(productData?['price'], fallback: price);
         }
       } catch (e) {
         productName = 'Product #$productId';
       }
+
+      itemTotal = qty * price;
 
       tableData.add([
         productName,
@@ -210,26 +192,20 @@ class CustomerInvoiceService {
           children: [
             pw.Row(
               mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-              children: [
-                pw.Text('Subtotal:'),
-                pw.Text('RM ${subtotal.toStringAsFixed(2)}'),
-              ],
+              children: [pw.Text('Subtotal:'), pw.Text('RM ${subtotal.toStringAsFixed(2)}')],
             ),
             pw.SizedBox(height: 5),
             pw.Row(
               mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-              children: [
-                pw.Text('Tax:'),
-                pw.Text('RM ${tax.toStringAsFixed(2)}'),
-              ],
+              children: [pw.Text('Tax:'), pw.Text('RM ${tax.toStringAsFixed(2)}')],
             ),
             pw.Divider(),
             pw.Row(
               mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
               children: [
                 pw.Text('TOTAL:', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 14)),
-                pw.Text('RM ${total.toStringAsFixed(2)}', 
-                  style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 18, color: PdfColors.blue900)),
+                pw.Text('RM ${total.toStringAsFixed(2)}',
+                    style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 18, color: PdfColors.blue900)),
               ],
             ),
           ],
@@ -243,15 +219,10 @@ class CustomerInvoiceService {
     return pw.Column(
       children: [
         pw.Divider(),
-        pw.Text(
-          'Thank you for your business!',
-          style: pw.TextStyle(fontSize: 11, fontWeight: pw.FontWeight.bold),
-        ),
+        pw.Text('Thank you for your business!', style: pw.TextStyle(fontSize: 11, fontWeight: pw.FontWeight.bold)),
         pw.SizedBox(height: 3),
-        pw.Text(
-          'For questions, contact us at info@floorbit.com',
-          style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey),
-        ),
+        pw.Text('For questions, contact us at info@floorbit.com',
+            style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey)),
       ],
     );
   }
