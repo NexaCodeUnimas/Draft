@@ -108,7 +108,7 @@ class _ProductCataloguePageState extends State<ProductCataloguePage> {
           'Products',
           style: TextStyle(color: Colors.white),
         ),
-        automaticallyImplyLeading: false, // removes back button
+        automaticallyImplyLeading: false, 
         actions: [
           IconButton(
             icon: const Icon(Icons.filter_list),

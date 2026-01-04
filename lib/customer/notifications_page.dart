@@ -8,11 +8,21 @@ class NotificationsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final currentUser = FirebaseAuth.instance.currentUser;
+    const themeColor = Color(0xFFFF9800);
 
     // --- CASE: USER NOT LOGGED IN ---
     if (currentUser == null) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Notifications'), backgroundColor: Colors.orange),
+        backgroundColor: const Color(0xFFF8F8F8),
+        appBar: AppBar(
+          title: const Text(
+            'Notifications',
+            style: TextStyle(color: Colors.white),
+          ),
+          backgroundColor: themeColor,
+          centerTitle: true,
+          iconTheme: const IconThemeData(color: Colors.white), 
+        ),
         body: const Center(
           child: Text(
             'You must be logged in to see notifications.',
@@ -25,7 +35,16 @@ class NotificationsPage extends StatelessWidget {
     final currentUserId = currentUser.uid;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Notifications'), backgroundColor: Colors.orange),
+      backgroundColor: const Color(0xFFF8F8F8),
+      appBar: AppBar(
+        title: const Text(
+          'Notifications',
+          style: TextStyle(color: Colors.white),
+        ),
+        backgroundColor: themeColor,
+        centerTitle: true,
+        iconTheme: const IconThemeData(color: Colors.white), 
+      ),
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
             .collection('notifications')
@@ -40,36 +59,53 @@ class NotificationsPage extends StatelessWidget {
 
           // --- ERROR STATE ---
           if (snapshot.hasError) {
-            return Center(child: Text('Error loading notifications: ${snapshot.error}'));
+            return Center(
+                child: Text('Error loading notifications: ${snapshot.error}'));
           }
 
           // --- NO NOTIFICATIONS ---
           final docs = snapshot.data?.docs ?? [];
           if (docs.isEmpty) {
-            return const Center(child: Text('No notifications yet.'));
+            return const Center(
+              child: Text(
+                'No notifications yet.',
+                style: TextStyle(fontSize: 16),
+              ),
+            );
           }
 
           // --- SHOW NOTIFICATIONS LIST ---
           return ListView.separated(
-            padding: const EdgeInsets.all(8),
+            padding: const EdgeInsets.all(16),
             itemCount: docs.length,
-            separatorBuilder: (_, __) => const Divider(),
+            separatorBuilder: (_, __) => const SizedBox(height: 12),
             itemBuilder: (context, index) {
               final doc = docs[index];
               final data = doc.data() as Map<String, dynamic>;
               final isRead = data['isRead'] ?? false;
 
-              return ListTile(
-                title: Text(data['title'] ?? 'No Title'),
-                subtitle: Text(data['body'] ?? 'No Body'),
-                trailing: isRead ? null : const Icon(Icons.fiber_new, color: Colors.red),
-                onTap: () {
-                  // Mark as read
-                  FirebaseFirestore.instance
-                      .collection('notifications')
-                      .doc(doc.id)
-                      .update({'isRead': true});
-                },
+              return Card(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                elevation: 2,
+                child: ListTile(
+                  title: Text(
+                    data['title'] ?? 'No Title',
+                    style: TextStyle(
+                        fontWeight: isRead ? FontWeight.normal : FontWeight.bold),
+                  ),
+                  subtitle: Text(data['body'] ?? 'No Body'),
+                  trailing: isRead
+                      ? null
+                      : const Icon(Icons.fiber_new, color: Colors.red),
+                  onTap: () {
+                    FirebaseFirestore.instance
+                        .collection('notifications')
+                        .doc(doc.id)
+                        .update({'isRead': true});
+                  },
+                ),
               );
             },
           );

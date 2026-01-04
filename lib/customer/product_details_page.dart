@@ -66,11 +66,16 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
         return Scaffold(
           appBar: AppBar(
             backgroundColor: Colors.orange,
-            title: const Text("Product Details"),
+            centerTitle: true,
+            title: const Text(
+              "Product Details",
+              style: TextStyle(color: Colors.white),
+            ),
             leading: IconButton(
-              icon: const Icon(Icons.arrow_back),
+              icon: const Icon(Icons.arrow_back, color: Colors.white),
               onPressed: () => Navigator.pop(context),
             ),
+            elevation: 0,
           ),
           body: SingleChildScrollView(
             padding: const EdgeInsets.all(12),

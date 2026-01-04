@@ -14,9 +14,15 @@ class ViewAppointmentsScreen extends StatelessWidget {
     // If no user is logged in
     if (user == null) {
       return Scaffold(
+        backgroundColor: const Color(0xFFF8F8F8),
         appBar: AppBar(
-          title: const Text("My Appointments"),
+          title: const Text(
+            "My Appointments",
+            style: TextStyle(color: Colors.white),
+          ),
           backgroundColor: themeColor,
+          centerTitle: true,
+          iconTheme: const IconThemeData(color: Colors.white), 
         ),
         body: const Center(
           child: Text(
@@ -33,9 +39,15 @@ class ViewAppointmentsScreen extends StatelessWidget {
         .snapshots();
 
     return Scaffold(
+      backgroundColor: const Color(0xFFF8F8F8),
       appBar: AppBar(
-        title: const Text("My Appointments"),
+        title: const Text(
+          "My Appointments",
+          style: TextStyle(color: Colors.white),
+        ),
         backgroundColor: themeColor,
+        centerTitle: true,
+        iconTheme: const IconThemeData(color: Colors.white), 
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: stream,
@@ -61,10 +73,8 @@ class ViewAppointmentsScreen extends StatelessWidget {
             );
           }
 
-          // Map documents to appointment objects
           final appointments = docs.map((doc) {
             final data = doc.data() as Map<String, dynamic>;
-
             DateTime? date;
             final rawDate = data['date'];
             if (rawDate is Timestamp) {
@@ -75,7 +85,6 @@ class ViewAppointmentsScreen extends StatelessWidget {
               date = DateTime.tryParse(rawDate);
             }
 
-            // Cast all fields to String safely
             final type = data['type']?.toString() ?? 'Unknown';
             final time = data['time']?.toString() ?? 'Unknown';
             final status = data['status']?.toString() ?? 'Unknown';
@@ -88,7 +97,6 @@ class ViewAppointmentsScreen extends StatelessWidget {
             };
           }).toList();
 
-          // Sort by date
           appointments.sort((a, b) {
             final dateA = a['date'] as DateTime?;
             final dateB = b['date'] as DateTime?;
@@ -108,12 +116,15 @@ class ViewAppointmentsScreen extends StatelessWidget {
               final time = appt['time'] as String;
               final status = appt['status'] as String;
 
+              final isCompleted = status.toLowerCase() == 'completed';
+
               return Card(
                 margin: const EdgeInsets.only(bottom: 12),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
-                elevation: 3,
+                elevation: 2,
+                color: Colors.white,
                 child: Padding(
                   padding: const EdgeInsets.all(16),
                   child: Column(
@@ -137,13 +148,21 @@ class ViewAppointmentsScreen extends StatelessWidget {
                         style: const TextStyle(fontSize: 14),
                       ),
                       const SizedBox(height: 4),
-                      Text(
-                        "Status: $status",
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: status.toLowerCase() == 'completed'
-                              ? Colors.green
-                              : Colors.orange,
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color:
+                              isCompleted ? Colors.green.shade100 : Colors.orange.shade100,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          status,
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            color: isCompleted ? Colors.green : Colors.orange,
+                          ),
                         ),
                       ),
                     ],
