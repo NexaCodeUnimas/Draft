@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'widgets/app_bottom_nav.dart'; // <-- import the reusable bottom nav
+import 'widgets/app_bottom_nav.dart'; 
 
 class AppointmentMenuScreen extends StatelessWidget {
   const AppointmentMenuScreen({super.key});
@@ -7,28 +7,33 @@ class AppointmentMenuScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFF8F8F8), 
       appBar: AppBar(
-        title: const Text("Appointments"),
-        backgroundColor: const Color(0xFFFF9800),
+        title: const Text(
+          "Appointments",
+          style: TextStyle(color: Colors.white),
+        ),
+        backgroundColor: Colors.orange, 
+        centerTitle: true, 
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          _MenuTile(
-            icon: Icons.add,
-            title: "Book Appointment",
-            onTap: () => Navigator.pushNamed(context, '/book_appointment'),
-          ),
-          _MenuTile(
-            icon: Icons.view_list,
-            title: "View Appointments",
-            onTap: () => Navigator.pushNamed(context, '/view_appointments'),
-          ),
-        ],
+      body: Padding(
+        padding: const EdgeInsets.all(20), 
+        child: ListView(
+          children: const [
+            _MenuTile(
+              icon: Icons.add,
+              title: "Book Appointment",
+              routeName: '/book_appointment',
+            ),
+            _MenuTile(
+              icon: Icons.view_list,
+              title: "View Appointments",
+              routeName: '/view_appointments',
+            ),
+          ],
+        ),
       ),
-
-      bottomNavigationBar: const AppBottomNav(currentIndex: 3),
-      
+      bottomNavigationBar: const AppBottomNav(currentIndex: 3), 
     );
   }
 }
@@ -36,23 +41,28 @@ class AppointmentMenuScreen extends StatelessWidget {
 class _MenuTile extends StatelessWidget {
   final IconData icon;
   final String title;
-  final VoidCallback onTap;
+  final String routeName;
 
   const _MenuTile({
+    super.key,
     required this.icon,
     required this.title,
-    required this.onTap,
+    required this.routeName,
   });
 
   @override
   Widget build(BuildContext context) {
     return Card(
       elevation: 2,
-      margin: const EdgeInsets.symmetric(vertical: 8),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      margin: const EdgeInsets.only(bottom: 16), 
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(15),
+        side: BorderSide(color: Colors.grey.shade200), 
+      ),
       child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         leading: Container(
-          padding: const EdgeInsets.all(10),
+          padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
             color: Colors.orange.shade100,
             borderRadius: BorderRadius.circular(12),
@@ -61,7 +71,7 @@ class _MenuTile extends StatelessWidget {
         ),
         title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
         trailing: const Icon(Icons.chevron_right),
-        onTap: onTap,
+        onTap: () => Navigator.pushNamed(context, routeName),
       ),
     );
   }
