@@ -12,13 +12,20 @@ class CartProvider extends ChangeNotifier {
   double get totalAmount =>
       _items.fold(0, (sum, item) => sum + item.totalPrice);
 
-  void addItem(Product product, {String color = ""}) {
+  void addItem(Product product, {String color = "", int quantity = 1}) {
     final index = _items.indexWhere(
-        (item) => item.product.id == product.id && item.selectedColor == color);
+            (item) => item.product.id == product.id && item.selectedColor == color);
+
     if (index >= 0) {
-      _items[index].quantity++;
+      // Add the specific quantity selected instead of just ++
+      _items[index].quantity += quantity;
     } else {
-      _items.add(CartItem(product: product, selectedColor: color));
+      // Create new CartItem with the specific quantity
+      _items.add(CartItem(
+        product: product,
+        selectedColor: color,
+        quantity: quantity,
+      ));
     }
     notifyListeners();
   }
@@ -31,6 +38,20 @@ class CartProvider extends ChangeNotifier {
   void clearCart() {
     _items.clear();
     notifyListeners();
+  }
+  void incrementQuantity(CartItem item) {
+    item.quantity++;
+    notifyListeners();
+  }
+
+  void decrementQuantity(CartItem item) {
+    if (item.quantity > 1) {
+      item.quantity--;
+      notifyListeners();
+    } else {
+      // If quantity is 1 and they press minus, remove the item
+      removeItem(item);
+    }
   }
 
   // Persist cart for a specific user

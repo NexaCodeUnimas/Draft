@@ -236,11 +236,16 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                   child: ElevatedButton(
                     onPressed: () {
                       final cart = context.read<CartProvider>();
+
                       cart.addItem(
-                          Product.fromMap(widget.productId, productData),
-                          color: selectedColorName);
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                          content: Text('Added to cart!')));
+                        Product.fromMap(widget.productId, productData),
+                        color: selectedColorName,
+                        quantity: quantity,
+                      );
+
+                      ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Added $quantity items to cart!'))
+                      );
                     },
                     child: const Text("Add to Cart",
                         style: TextStyle(

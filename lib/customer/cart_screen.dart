@@ -40,30 +40,80 @@ class CartScreen extends StatelessWidget {
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: ListTile(
-                          contentPadding: const EdgeInsets.all(12),
-                          leading: ClipRRect(
-                            borderRadius: BorderRadius.circular(8),
-                            child: Image.asset(
-                              item.product.image,
-                              width: 60,
-                              height: 60,
-                              fit: BoxFit.cover,
-                            ),
-                          ),
-                          title: Text(
-                            item.product.name,
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          subtitle: Text(
-                            "Color: ${item.selectedColor}\nRM ${item.totalPrice.toStringAsFixed(2)}",
-                            style: const TextStyle(color: Colors.grey),
-                          ),
-                          trailing: IconButton(
-                            icon: const Icon(Icons.delete, color: Colors.red),
-                            onPressed: () {
-                              cart.removeItem(item);
-                            },
+                        child: Padding(
+                          padding: const EdgeInsets.all(12.0),
+
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              //  Product Image
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(8),
+                                child: Image.asset(
+                                  item.product.image,
+                                  width: 70,
+                                  height: 70,
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+
+                              // product Info
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      item.product.name,
+                                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                                    ),
+                                    Text(
+                                      "Color: ${item.selectedColor}",
+                                      style: const TextStyle(color: Colors.grey, fontSize: 13),
+                                    ),
+                                    Text(
+                                      "RM ${item.product.price.toStringAsFixed(2)} per unit",
+                                      style: const TextStyle(color: Colors.grey, fontSize: 12),
+                                    ),
+                                  ],
+                                ),
+                              ),
+
+                              //
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      IconButton(
+                                        visualDensity: VisualDensity.compact,
+                                        icon: const Icon(Icons.remove_circle_outline, color: Colors.orange, size: 22),
+                                        onPressed: () => cart.decrementQuantity(item),
+                                      ),
+                                      Text(
+                                        "${item.quantity}",
+                                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                                      ),
+                                      IconButton(
+                                        visualDensity: VisualDensity.compact,
+                                        icon: const Icon(Icons.add_circle_outline, color: Colors.orange, size: 22),
+                                        onPressed: () => cart.incrementQuantity(item),
+                                      ),
+                                    ],
+                                  ),
+                                  Text(
+                                    "RM ${item.totalPrice.toStringAsFixed(2)}",
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.orange,
+                                        fontSize: 14
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
                           ),
                         ),
                       );
@@ -75,11 +125,11 @@ class CartScreen extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: Colors.orange.shade50,
                     borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-                    boxShadow: [
+                    boxShadow: const [
                       BoxShadow(
                         color: Colors.black12,
                         blurRadius: 8,
-                        offset: const Offset(0, -2),
+                        offset: Offset(0, -2),
                       ),
                     ],
                   ),

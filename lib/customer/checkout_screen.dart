@@ -176,37 +176,56 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                           child: ElevatedButton(
                             onPressed: () async {
                               if (!_formKey.currentState!.validate()) return;
+
                               setState(() => isProcessing = true);
 
-                              // Save order to Firestore
-                              final ordersRef =
-                                  FirebaseFirestore.instance.collection('orders');
-                              await ordersRef.add({
-                                'userId': user?.uid ?? '',
-                                'items': cart.items.map((e) => e.toMap()).toList(),
-                                'total': cart.totalAmount,
-                                'timestamp': FieldValue.serverTimestamp(),
-                                'payment': {
-                                  'cardNumber': cardNumberController.text,
-                                  'cardHolder': cardHolderController.text,
-                                  'mm': mmController.text,
-                                  'yy': yyController.text,
-                                  'cvv': cvvController.text,
-                                },
-                              });
+                              try {
+                                // 1. Save order to Firestore
+                                final ordersRef = FirebaseFirestore.instance.collection('orders');
+                                await ordersRef.add({
+                                  'userId': user?.uid ?? '',
+                                  'items': cart.items.map((e) => e.toMap()).toList(),
+                                  'total': cart.totalAmount,
+                                  'timestamp': FieldValue.serverTimestamp(),
+                                  'payment': {
+                                    'cardNumber': cardNumberController.text,
+                                    'cardHolder': cardHolderController.text,
+                                    'mm': mmController.text,
+                                    'yy': yyController.text,
+                                    'cvv': cvvController.text,
+                                  },
+                                  'status': 'pending', // Important for FR-20 tracking
+                                });
 
-                              // Clear cart
-                              cart.clearCart();
+                                // 2. Clear the cart
+                                cart.clearCart();
 
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text("Payment successful!"),
-                                  backgroundColor: Colors.green,
-                                ),
-                              );
-                              Navigator.popUntil(
-                                  context, ModalRoute.withName('/home'));
+                                if (mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text("Payment successful!"),
+                                      backgroundColor: Colors.green,
+                                    ),
+                                  );
+
+                                  // 3. FIXED NAVIGATION: Clear stack and go to Home
+                                  Navigator.pushNamedAndRemoveUntil(
+                                    context,
+                                    '/home',
+                                        (route) => false, // This ensures every other screen is removed
+                                  );
+                                }
+                              } catch (e) {
+                                // 4. ERROR HANDLING: Reset loading state if Firestore fails
+                                if (mounted) {
+                                  setState(() => isProcessing = false);
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text("Payment failed: $e"), backgroundColor: Colors.red),
+                                  );
+                                }
+                              }
                             },
+
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.transparent,
                               shadowColor: Colors.transparent,
