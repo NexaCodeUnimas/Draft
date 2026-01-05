@@ -160,8 +160,8 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             _ActionCard(
               icon: Icons.auto_awesome,
-              title: 'AI Assistance',
-              subtitle: 'AI-powered visualization & recommendations',
+              title: 'AI Chatbot',
+              subtitle: 'Your virtual assistant for flooring decisions',
               onTap: () => Navigator.pushNamed(context, '/ai'),
             ),
             _ActionCard(
