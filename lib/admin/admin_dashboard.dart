@@ -325,37 +325,52 @@ class CustomerActivitySection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // 1. Calculate the date for 7 days ago
+    final DateTime sevenDaysAgo = DateTime.now().subtract(const Duration(days: 7));
+
     return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance.collection('profiles').snapshots(),
+      // 2. Filter query for the last 7 days
+      stream: FirebaseFirestore.instance
+          .collection('profiles')
+          .where('registeredDate', isGreaterThanOrEqualTo: Timestamp.fromDate(sevenDaysAgo))
+          .snapshots(),
       builder: (context, snapshot) {
         if (!snapshot.hasData) return const SizedBox();
 
-        Map<int, int> monthlyGrowth = {};
+        // 3. Initialize a map for the last 7 days with 0 counts
+        Map<String, int> dailyGrowth = {};
+        for (int i = 6; i >= 0; i--) {
+          String day = DateFormat('E').format(DateTime.now().subtract(Duration(days: i)));
+          dailyGrowth[day] = 0;
+        }
+
+        // 4. Fill the map with real registration counts
         for (var doc in snapshot.data!.docs) {
           final data = doc.data() as Map<String, dynamic>;
           if (data['registeredDate'] != null) {
             DateTime date = (data['registeredDate'] as Timestamp).toDate();
-            monthlyGrowth[date.month] = (monthlyGrowth[date.month] ?? 0) + 1;
+            String dayLabel = DateFormat('E').format(date);
+            if (dailyGrowth.containsKey(dayLabel)) {
+              dailyGrowth[dayLabel] = (dailyGrowth[dayLabel] ?? 0) + 1;
+            }
           }
         }
 
+        // 5. Convert map to chart spots
+        List<String> labels = dailyGrowth.keys.toList();
         List<FlSpot> spots = [];
-        for (int i = 1; i <= 12; i++) {
-          if (monthlyGrowth.containsKey(i)) {
-            spots.add(FlSpot(i.toDouble(), monthlyGrowth[i]!.toDouble()));
-          }
+        for (int i = 0; i < labels.length; i++) {
+          spots.add(FlSpot(i.toDouble(), dailyGrowth[labels[i]]!.toDouble()));
         }
 
         return _buildChartContainer(
-          title: "Customer Registration Trends",
-          child: spots.isEmpty
-              ? const Center(child: Text("No registration dates found"))
-              : LineChart(
+          title: "Customer Activity (Last 7 Days)",
+          child: LineChart(
             LineChartData(
               gridData: const FlGridData(show: true, drawVerticalLine: false),
-              // --- ADDED LABELS LOGIC ---
               titlesData: FlTitlesData(
                 leftTitles: AxisTitles(
+                  axisNameWidget: const Text("Registrations", style: TextStyle(fontSize: 10)),
                   sideTitles: SideTitles(
                     showTitles: true,
                     reservedSize: 30,
@@ -366,10 +381,9 @@ class CustomerActivitySection extends StatelessWidget {
                   sideTitles: SideTitles(
                     showTitles: true,
                     getTitlesWidget: (value, meta) {
-                      const months = ["", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-                      int m = value.toInt();
-                      if (m >= 1 && m <= 12) {
-                        return Text(months[m], style: const TextStyle(fontSize: 10));
+                      int index = value.toInt();
+                      if (index >= 0 && index < labels.length) {
+                        return Text(labels[index], style: const TextStyle(fontSize: 10));
                       }
                       return const SizedBox();
                     },

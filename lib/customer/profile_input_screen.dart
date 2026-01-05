@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class ProfileInputScreen extends StatefulWidget {
   final String userId;
@@ -62,6 +63,8 @@ class _ProfileInputScreenState extends State<ProfileInputScreen> {
               ElevatedButton(
                 onPressed: () async {
                   if (_formKey.currentState!.validate()) {
+
+                    final String? userEmail = FirebaseAuth.instance.currentUser?.email;
                     await FirebaseFirestore.instance
                         .collection('profiles')
                         .doc(widget.userId)
@@ -73,6 +76,7 @@ class _ProfileInputScreenState extends State<ProfileInputScreen> {
                       'state': _state.text.trim(),
                       'zip': _zip.text.trim(),
                       'registeredDate': FieldValue.serverTimestamp(),
+                      'email': userEmail,
                     });
                     Navigator.pushReplacementNamed(context, '/home');
                   }
