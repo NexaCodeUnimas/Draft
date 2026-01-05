@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'profile_edit_screen.dart';
+import 'faq_screen.dart';
 import '../models/user_profile.dart';
 
 class ProfileManagementScreen extends StatefulWidget {
@@ -46,6 +47,32 @@ class _ProfileManagementScreenState extends State<ProfileManagementScreen> {
             );
       isLoading = false;
     });
+  }
+
+  Future<void> _handleChangePassword() async {
+    final email = user?.email;
+    if (email == null) return;
+
+    try {
+      await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Password reset link sent! Check your email."),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } on FirebaseAuthException catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.message ?? "Failed to send reset email"),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -224,6 +251,15 @@ class _ProfileManagementScreenState extends State<ProfileManagementScreen> {
           const Text("Account Actions",
               style: TextStyle(fontWeight: FontWeight.bold)),
           const SizedBox(height: 12),
+          _actionButton("FAQ", onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const FAQScreen()),
+            );
+          }),
+          const SizedBox(height: 8),
+          _actionButton("Change Password", onPressed: _handleChangePassword),
+          const SizedBox(height: 8),
           _actionButton("Sign Out", onPressed: () async {
             await FirebaseAuth.instance.signOut();
             Navigator.pushNamedAndRemoveUntil(context, '/', (_) => false);
